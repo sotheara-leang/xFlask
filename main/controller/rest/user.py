@@ -19,7 +19,7 @@ def get_users(user_service: UserService):
 @app.route('<user_id>')
 def get_user(user_id, user_service: UserService):
     user = user_service.get_user(user_id)
-    return Response.success(user.to_dict()).to_dict()
+    return Response.success(user).to_dict()
 
 @bp.route('', methods=['POST'])
 def create_user(user_service: UserService):

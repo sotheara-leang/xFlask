@@ -5,10 +5,19 @@ with open('requirement.txt') as fp:
 
 setup(
     name='xFlask',
-    version='0.0.1',
-    description='xFlask Restful Framework',
     packages=find_packages(exclude=['test']),
-    python_requires=">=3.5",
+    version='0.0.2',
+    description='xFlask Restful Framework',
+    author='LEANG Sotheara',
+    author_email='leangsotheara@gmail.com',
+    url='https://github.com/sotheara-leang/xFlask.git',
+    keywords=['xFlask', 'Restful'],
     install_requires=libraries,
-    include_package_data=True
+    python_requires=">=3.5",
+    include_package_data=True,
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License'
+    ]
 )
