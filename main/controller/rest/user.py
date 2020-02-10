@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from core.web.response import Response
+from xflask.web.response import Response
 from main.service.user import UserService
 from main.model.user import User
 
@@ -16,7 +16,7 @@ def get_users(user_service: UserService):
 
     return Response.success(results).to_dict()
 
-@bp.route('<user_id>')
+@app.route('<user_id>')
 def get_user(user_id, user_service: UserService):
     user = user_service.get_user(user_id)
     return Response.success(user.to_dict()).to_dict()
