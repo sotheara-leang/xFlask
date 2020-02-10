@@ -1,0 +1,20 @@
+APP_NAME: flask-server
+
+DEBUG: true
+ENV: development
+TESTING: true
+
+SECRET_KEY: AAAAAA
+
+JWT_SECRET_KEY: BBBBBB
+
+SQLALCHEMY_TRACK_MODIFICATIONS: false
+SQLALCHEMY_DATABASE_URI: sqlite://
+
+HOST: localhost
+PORT: 8000
+
+STATIC_DIR: main/resource/static
+TEMPLATE_DIR: main/resource/template
+
+LOGGING: true
