@@ -3,9 +3,9 @@ from flask import request
 from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
 from marshmallow.exceptions import ValidationError
 
-from ..exception import Exception
-from ..type.status_code import *
-from ..web.response import Response
+from xflask.exception import Exception
+from xflask.type.status_code import *
+from xflask.web.response import Response
 
 
 class ErrorHandler(object):

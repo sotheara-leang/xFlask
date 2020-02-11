@@ -1,7 +1,4 @@
-from xflask import db
-from xflask.server import Server
-
-server = Server(db)
+from main import server
 
 if __name__ == '__main__':
     server.run()

@@ -1,5 +1,7 @@
-from xflask import db
+from xflask import *
 from xflask.server import Server
 
-server = Server(db)
+setup_root_dir('xFlask')
+
+server = Server(db, filters=None)
 app = server.app

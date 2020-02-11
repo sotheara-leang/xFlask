@@ -2,7 +2,7 @@ import json
 
 from sqlalchemy.orm.attributes import QueryableAttribute
 
-from . import db
+from xflask import db
 
 
 class Model(db.Model):
@@ -94,14 +94,18 @@ class Model(db.Model):
         for key in list(set(properties) - set(columns) - set(relationships)):
             if key.startswith("_"):
                 continue
+
             if not hasattr(self.__class__, key):
                 continue
+
             attr = getattr(self.__class__, key)
             if not (isinstance(attr, property) or isinstance(attr, QueryableAttribute)):
                 continue
+
             check = "%s.%s" % (_path, key)
             if check in _hide or key in hidden:
                 continue
+
             if check in show or key in default:
                 val = getattr(self, key)
                 if hasattr(val, "to_dict"):

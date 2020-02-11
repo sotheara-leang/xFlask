@@ -1,5 +1,5 @@
-from ..common.util import to_dict
-from ..type.status_code import *
+from xflask.common.util import to_dict
+from xflask.type.status_code import *
 
 
 class Response(object):

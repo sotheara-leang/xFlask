@@ -6,6 +6,7 @@ from main.model.user import User
 
 bp = Blueprint('user', __name__, url_prefix='/api/user')
 
+
 @bp.route('')
 def get_users(user_service: UserService):
     users = user_service.get_users()
@@ -16,10 +17,12 @@ def get_users(user_service: UserService):
 
     return Response.success(results).to_dict()
 
-@app.route('<user_id>')
+
+@bp.route('<user_id>')
 def get_user(user_id, user_service: UserService):
     user = user_service.get_user(user_id)
     return Response.success(user).to_dict()
+
 
 @bp.route('', methods=['POST'])
 def create_user(user_service: UserService):

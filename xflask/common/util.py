@@ -3,9 +3,11 @@ import json
 import os
 
 
-def get(obj, default):
-    return obj if obj is not None else default
+def get_root_dir():
+    return os.environ['PROJ_HOME']
 
+def get_file(file):
+    return os.path.join(get_root_dir(), file)
 
 def to_dict(obj):
     if isinstance(obj, str):
@@ -13,10 +15,8 @@ def to_dict(obj):
     else:
         return json.loads(json.dumps(obj, default=lambda o: o.__dict__))
 
-
 def to_json(obj):
     return json.dumps(obj.__dict__)
-
 
 def import_modules(root_dir, model_pkgs):
     for model_pkg in model_pkgs:

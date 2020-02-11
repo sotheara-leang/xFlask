@@ -1,4 +1,4 @@
-from .type.status_code import StatusCode
+from xflask.type.status_code import StatusCode
 
 
 class Exception(Exception):

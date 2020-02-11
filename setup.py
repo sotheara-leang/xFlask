@@ -6,7 +6,7 @@ with open('requirement.txt') as fp:
 setup(
     name='xFlask',
     packages=find_packages(exclude=['test']),
-    version='0.0.2',
+    version='0.0.1',
     description='xFlask Restful Framework',
     author='LEANG Sotheara',
     author_email='leangsotheara@gmail.com',

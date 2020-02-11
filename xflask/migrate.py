@@ -1,8 +1,8 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 
-from . import db
-from .common.util import import_modules
+from xflask import db
+from xflask.common.util import get_root_dir, import_modules
 
 
 class Migration(object):
@@ -14,7 +14,7 @@ class Migration(object):
         self.manager = Manager(server.app)
         self.manager.add_command('db', MigrateCommand)
 
-        import_modules(server.conf.get('PROJ_HOME'), model_pkgs)
+        import_modules(get_root_dir(), model_pkgs)
 
     def run(self):
         self.manager.run()

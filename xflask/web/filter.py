@@ -3,9 +3,8 @@ from flask_jwt_extended import verify_jwt_in_request
 from flask_jwt_extended.exceptions import *
 from werkzeug.routing import Map, Rule
 
-from ..common.util import get
-from ..exception import Exception
-from ..type.status_code import *
+from xflask.exception import Exception
+from xflask.type.status_code import *
 
 
 class Filter(object):
@@ -23,7 +22,7 @@ class Filter(object):
 class AuthTokenFilter(Filter):
 
     def __init__(self, open_routes=None):
-        self.open_routes = get(open_routes, ['/api/login', '/static/*'])
+        self.open_routes = open_routes or ['/api/login', '/static/*']
 
         rules = []
         for route in self.open_routes:
