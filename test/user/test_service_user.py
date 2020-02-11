@@ -22,3 +22,9 @@ class TestServiceUser(TestCase):
 
         self.assertIs(user, new_user)
 
+    def test_create_user2(self):
+        user_service = self.injector.get(UserService)
+
+        user = User(username='user1', email='user1@gmail.com', password='123')
+
+        d = user.to_dict()
