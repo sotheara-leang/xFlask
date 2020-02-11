@@ -21,7 +21,7 @@ class Server(object):
 
     DEF_CONF_FILE           = 'main/conf/server.yml'
     DEF_LOG_FILE            = 'main/conf/logging.yml'
-    DEF_BP_PKGS             = ['main.controller.rest']
+    DEF_BP_PKGS             = ['main.controller']
     DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
     DEF_FILTERS             = [AuthTokenFilter()]
     DEF_ERROR_HANDLER       = SimpleErrorHandler()
