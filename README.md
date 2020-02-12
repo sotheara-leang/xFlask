@@ -1,6 +1,15 @@
-# xFlask
+xFlask combines the extensions of Flask and it is designed to make getting started quick and easy to build Restful web service, with the ability to scale up to complex applications. It began as a simple wrapper around Flask and its extensions to provide a simple platform to ease API development.
+## 1. Functionalities
 
-## 1. Usages
+* Follow concepts of Model, Data Access Object (DA), Service and Controller
+* Ease to decouple component dependencies by using Flask-Injector
+* Provide a simple way to validate the Data Access Object by using Marshmallow
+* Adapt with Flask-Migration to easily maintain the database schema
+* Provide simple logging API helping to debug the application flow
+* Adapt with Flask-Testing for testing the application components
+ 
+
+## 2. Usages
 
 * Model
 
@@ -48,6 +57,6 @@ class UserService(Service):
 @app.route('<user_id>')
 def get_user(user_id, user_service: UserService):
     user = user_service.get_user(user_id)
-    return Response.success(user).to_dict()
+    return Response.success(user.to_dict()).to_dict()
 
 ```
