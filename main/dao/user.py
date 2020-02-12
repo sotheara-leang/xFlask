@@ -1,16 +1,9 @@
-from injector import inject
-from flask_sqlalchemy import SQLAlchemy
-
 from xflask.dao import Dao
 
 from main.model.user import User
 
 
 class UserDao(Dao):
-
-    @inject
-    def __init__(self, db: SQLAlchemy):
-        self.db = db
 
     def get_users(self):
         return User.query.all()
@@ -22,5 +15,5 @@ class UserDao(Dao):
         return User.query.filter_by(username=username).first()
 
     def create_user(self, user: User):
-        self.db.session.add(user)
-        self.db.session.commit()
+        self.add(user)
+        self.commit()

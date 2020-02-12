@@ -10,17 +10,13 @@ bp = Blueprint('user', __name__, url_prefix='/api/user')
 @bp.route('')
 def get_users(user_service: UserService):
     users = user_service.get_users()
-
-    results = []
-    for user in users:
-        results.append(user.to_dict())
-
-    return Response.success(results).to_dict()
+    users = [e.to_dict() for e in users]
+    return Response.success(users).to_dict()
 
 
 @bp.route('<user_id>')
 def get_user(user_id, user_service: UserService):
-    user = user_service.get_user(user_id)
+    user = user_service.get_user(user_id).to_dict()
     return Response.success(user).to_dict()
 
 
