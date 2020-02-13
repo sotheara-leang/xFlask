@@ -11,7 +11,7 @@ from werkzeug.utils import find_modules, import_string
 from xflask.common.util import get_root_dir, get_file
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
-from xflask.web.auth_manager import JWTAuthManager
+from xflask.security.auth_manager import SimpleJWTAuthManager
 from xflask.web.filter import AuthTokenFilter
 from xflask.web.error_handler import SimpleErrorHandler
 
@@ -25,7 +25,7 @@ class Server(object):
     DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
     DEF_FILTERS             = [AuthTokenFilter()]
     DEF_ERROR_HANDLER       = SimpleErrorHandler()
-    DEF_AUTH_MANAGER        = JWTAuthManager()
+    DEF_AUTH_MANAGER        = SimpleJWTAuthManager()
 
     def __init__(self, db,
                  conf_file=DEF_CONF_FILE,
@@ -93,6 +93,12 @@ class Server(object):
                     root_path=get_root_dir())
 
         self.app.config.from_mapping(self.conf.cfg)
+
+        #
+        if not hasattr(self.app, 'extensions'):
+            self.app.extensions = {}
+
+        self.app.extensions['xflask'] = self
 
     def _init_db(self):
         if self.conf.exist('SQLALCHEMY_DATABASE_URI'):

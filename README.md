@@ -1,7 +1,7 @@
 xFlask combines the extensions of Flask and it is designed to make getting started quick and easy to build Restful web service, with the ability to scale up to complex applications. It began as a simple wrapper around Flask and its extensions to provide a simple platform to ease API development.
 ## 1. Functionalities
 
-* Follow concepts of Model, Data Access Object (DA), Service and Controller
+* Follow concepts of Model, Data Access Object (DAO), Service and Controller
 * Ease to decouple component dependencies by using Flask-Injector
 * Provide a simple way to validate the Data Access Object by using Marshmallow
 * Adapt with Flask-Migration to easily maintain the database schema

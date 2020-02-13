@@ -1,5 +1,4 @@
-from xflask import db
-from xflask.model import Model
+from xflask.model import *
 
 
 class Role(Model):
