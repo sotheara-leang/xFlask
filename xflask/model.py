@@ -2,13 +2,15 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql import func
 
 from xflask import db
+from xflask.type import Type
 from xflask.security import get_current_user
+from xflask.common.date_util import *
 
 
 class Model(db.Model):
     __abstract__ = True
 
-    def to_dict(self, show=[], hide=[], dept=0):
+    def to_dict(self, show=[], hide=[], dept=0, df=dd_MM_yyyy_hh_mm_ss):
         hidden = self._hidden_fields if hasattr(self, "_hidden_fields") else []
         hidden.extend([e for e in hide if '.' not in e])
         hidden = [e for e in hidden if e not in show]
@@ -21,7 +23,13 @@ class Model(db.Model):
             if key.startswith("_") or key in hidden:
                 continue
 
-            ret_data[key] = getattr(self, key)
+            value = getattr(self, key)
+            if isinstance(value, datetime):
+                value = to_date_str(value, df)
+            elif isinstance(value, Type):
+                value = value.code()
+
+            ret_data[key] = value
 
         # relationships
         if dept > 0:
@@ -66,7 +74,13 @@ class Model(db.Model):
                         else:
                             ret_data[key] = None
                     else:
-                        ret_data[key] = getattr(self, key)
+                        value = getattr(self, key)
+                        if isinstance(value, datetime):
+                            value = to_date_str(value, df)
+                        elif isinstance(value, Type):
+                            value = value.code()
+
+                        ret_data[key] = value
 
         return ret_data
 

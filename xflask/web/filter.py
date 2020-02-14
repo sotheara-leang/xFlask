@@ -4,7 +4,7 @@ from flask_jwt_extended.exceptions import *
 from werkzeug.routing import Map, Rule
 
 from xflask.exception import Exception
-from xflask.type.status_code import *
+from xflask.type.status_code import StatusCode
 
 
 class Filter(object):
@@ -42,4 +42,4 @@ class AuthTokenFilter(Filter):
             try:
                 verify_jwt_in_request()
             except JWTExtendedException:
-                raise Exception(SC_AUTH_INVALID)
+                raise Exception(StatusCode.AUTH_INVALID)

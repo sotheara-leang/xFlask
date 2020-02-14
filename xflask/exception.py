@@ -1,7 +1,7 @@
-from xflask.type.status_code import StatusCode
+from xflask.type import Type
 
 
 class Exception(Exception):
 
-    def __init__(self, code: StatusCode):
+    def __init__(self, code: Type):
         self.code = code
