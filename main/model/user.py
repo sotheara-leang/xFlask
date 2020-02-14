@@ -1,7 +1,7 @@
 from xflask.model import *
 
 
-class User(Model):
+class User(Model, AuditableMixin):
 
     id          = db.Column(db.Integer, primary_key=True)
     username    = db.Column(db.String(50), unique=True, nullable=False)
@@ -14,3 +14,4 @@ class User(Model):
         'password',
         'role'
     ]
+

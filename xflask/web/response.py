@@ -1,4 +1,4 @@
-from xflask.common.util import to_dict
+from xflask.common import to_dict
 from xflask.type.status_code import *
 
 

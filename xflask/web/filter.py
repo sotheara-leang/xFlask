@@ -22,7 +22,7 @@ class Filter(object):
 class AuthTokenFilter(Filter):
 
     def __init__(self, open_routes=None):
-        self.open_routes = open_routes or ['/api/login', '/static/*']
+        self.open_routes = open_routes or ['/api/login', '/static/<path:route>']
 
         rules = []
         for route in self.open_routes:

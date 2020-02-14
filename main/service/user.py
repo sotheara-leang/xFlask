@@ -40,5 +40,5 @@ class UserService(Service):
             self.logger.error('password invalid: username=%s, password=%s', username, password)
             raise Exception(BC_PWD_INVALID)
 
-        token = create_access_token(identity=user.id)
+        token = create_access_token(identity=user.to_dict())
         return token
