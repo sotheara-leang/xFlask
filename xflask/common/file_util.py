@@ -1,6 +1,6 @@
-import importlib
-import json
 import os
+import sys
+import importlib
 
 
 def get_root_dir():
@@ -8,15 +8,6 @@ def get_root_dir():
 
 def get_file(file):
     return os.path.join(get_root_dir(), file)
-
-def to_dict(obj):
-    if isinstance(obj, str):
-        return json.loads(obj)
-    else:
-        return json.loads(json.dumps(obj, default=lambda o: o.__dict__))
-
-def to_json(obj):
-    return json.dumps(obj.__dict__)
 
 def import_modules(root_dir, model_pkgs):
     for model_pkg in model_pkgs:
@@ -27,3 +18,15 @@ def import_modules(root_dir, model_pkgs):
             model_namespace = model_pkg + '.' + module[:-3]
 
             importlib.import_module(model_namespace)
+
+def setup_root_dir(root_dir_name):
+    cur_dir = os.getcwd()
+    while True:
+        if os.path.basename(cur_dir) == root_dir_name:
+            root_dir = cur_dir
+            break
+        else:
+            cur_dir = os.path.dirname(cur_dir)
+
+    os.environ['PROJ_HOME'] = root_dir
+    sys.path.append(root_dir)

@@ -13,8 +13,8 @@ class TestCase(TestCase):
         self.injector = server.flask_injector.injector
         self.client = server.app.test_client()
 
-        db.create_all()
+        #db.create_all()
 
     def tearDown(self):
         db.session.remove()
-        db.drop_all()
+        #db.drop_all()

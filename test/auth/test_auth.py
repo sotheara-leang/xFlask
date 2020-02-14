@@ -1,6 +1,6 @@
 from test.test_case import *
 
-from xflask.common.util import to_dict
+from xflask.common import to_dict
 from main.controller.vo.auth import LoginVo
 
 
@@ -11,9 +11,16 @@ class TestAuth(TestCase):
 
         response = self.client.post('/api/login', json=to_dict(login_vo))
 
-        print('\n', response.json)
+        json = response.json
 
-        self.assertIsNotNone(response.json)
+        data = {'username': 'user2', 'password': '123', 'email': 'user2@example.com'}
+
+        response = self.client.post('/api/user', json=to_dict(data),
+                                   headers={'Authorization': 'Bearer ' + json.get('data').get('token')})
+
+        print(response.json)
+
+
 
 
 

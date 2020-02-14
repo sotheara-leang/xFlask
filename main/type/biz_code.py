@@ -1,12 +1,7 @@
-from xflask.type.status_code import StatusCode
+from xflask.type import Enum
 
 
-class BizCode(StatusCode):
-    ...
+class BizCode(Enum):
 
-# status code
-
-BC_USER_NOT_FOUND     = BizCode('1100', 'user not found')
-BC_PWD_INVALID        = BizCode('1101', 'password invalid')
-
-
+    USER_NOT_FOUND     = '10100', 'User not found'
+    PWD_INVALID        = '10101', 'Password invalid'

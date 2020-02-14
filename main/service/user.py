@@ -7,7 +7,7 @@ from xflask.exception import Exception
 
 from main.dao.user import UserDao
 from main.model.user import User
-from main.type.biz_code import *
+from main.type.biz_code import BizCode
 
 
 class UserService(Service):
@@ -34,11 +34,11 @@ class UserService(Service):
         user = self.user_dao.get_user_by_username(username)
         if user is None:
             self.logger.error('user not found: username=%s', username)
-            raise Exception(BC_USER_NOT_FOUND)
+            raise Exception(BizCode.USER_NOT_FOUND)
 
         if user.password != password:
             self.logger.error('password invalid: username=%s, password=%s', username, password)
-            raise Exception(BC_PWD_INVALID)
+            raise Exception(BizCode.PWD_INVALID)
 
-        token = create_access_token(identity=user.id)
+        token = create_access_token(identity=user.to_dict())
         return token

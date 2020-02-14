@@ -1,14 +1,10 @@
-class StatusCode(object):
-
-    def __init__(self, code, msg):
-        self.code = code
-        self.msg = msg
+from xflask.type import Enum
 
 
-# status code
+class StatusCode(Enum):
 
-SC_SUCCESS          = StatusCode('0000', 'success')
-SC_SYS_ERROR        = StatusCode('1001', 'internal server error')
-SC_INVALID          = StatusCode('1003', 'request invalid')
-SC_NOT_FOUND        = StatusCode('1004', 'resource not found')
-SC_AUTH_INVALID     = StatusCode('1005', 'authentication invalid')
+    SUCCESS          = '00000', 'Success'
+    SYS_ERROR        = '10001', 'Internal Server Error'
+    INVALID          = '10003', 'Request Invalid'
+    NOT_FOUND        = '10004', 'Resource not found'
+    AUTH_INVALID     = '10005', 'Authentication Invalid'
