@@ -1,7 +1,7 @@
-from xflask.type import Type
+from xflask.type import Enum
 
 
 class Exception(Exception):
 
-    def __init__(self, code: Type):
+    def __init__(self, code: Enum):
         self.code = code

@@ -1,7 +1,7 @@
-from xflask.type import Type
+from xflask.type import Enum
 
 
-class EducationLevel(Type):
+class EducationLevel(Enum):
 
     BACHELOR     = '0'
     MASTER       = '1'

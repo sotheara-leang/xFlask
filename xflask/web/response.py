@@ -1,11 +1,11 @@
 from xflask.common import to_dict
-from xflask.type import Type
+from xflask.type import Enum
 from xflask.type.status_code import StatusCode
 
 
 class Response(object):
 
-    def __init__(self, code: Type, data=None):
+    def __init__(self, code: Enum, data=None):
         self.status = code.code()
         self.message = code.desc()
         self.data = data

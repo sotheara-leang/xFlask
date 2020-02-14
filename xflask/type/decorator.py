@@ -1,12 +1,12 @@
-from xflask.type import Type
+from xflask.type import Enum
 import sqlalchemy.types as types
 
 
-class StringTypeEnum(types.TypeDecorator):
+class StringEnum(types.TypeDecorator):
 
     impl = types.String
 
-    def __init__(self, enum_type: Type, *args, **kwargs):
+    def __init__(self, enum_type: Enum, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.enum_type = enum_type
 
@@ -17,6 +17,6 @@ class StringTypeEnum(types.TypeDecorator):
         return self.enum_type.value_of(value)
 
 
-class IntegerTypeEnum(StringTypeEnum):
+class IntegerEnum(StringEnum):
 
     impl = types.Integer
