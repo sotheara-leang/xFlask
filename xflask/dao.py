@@ -25,14 +25,15 @@ class Dao(Component):
 
     @transactional()
     def update(self, obj):
-        self.query().update(**obj)
+        self.query().filter_by(id=obj.id).update(obj.to_dict(json_serialize=False))
 
     @transactional()
     def delete(self, obj):
         self.db.session.delete(obj)
 
+    @transactional()
     def delete_by_id(self, id):
-        self.filter(id=id).delete()
+        self.query().filter_by(id=id).delete()
 
     def begin(self, subtransactions=True, nested=False):
         self.db.session.begin(subtransactions=subtransactions, nested=nested)

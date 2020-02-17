@@ -11,7 +11,7 @@ class StringEnum(types.TypeDecorator):
         self.enum_type = enum_type
 
     def process_bind_param(self, value, dialect):
-        return value.code()
+        return None if value is None else value.code()
 
     def process_result_value(self, value, dialect):
         return self.enum_type.value_of(value)

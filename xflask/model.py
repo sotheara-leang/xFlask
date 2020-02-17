@@ -10,7 +10,7 @@ from xflask.common.date_util import *
 class Model(db.Model):
     __abstract__ = True
 
-    def to_dict(self, show=[], hide=[], dept=0, df=dd_MM_yyyy_hh_mm_ss):
+    def to_dict(self, show=[], hide=[], dept=0, df=dd_MM_yyyy_hh_mm_ss, json_serialize=True):
         hidden = self._hidden_fields if hasattr(self, "_hidden_fields") else []
         hidden.extend([e for e in hide if '.' not in e])
         hidden = [e for e in hidden if e not in show]
@@ -24,9 +24,9 @@ class Model(db.Model):
                 continue
 
             value = getattr(self, key)
-            if isinstance(value, datetime):
+            if isinstance(value, datetime) and json_serialize is True:
                 value = to_date_str(value, df)
-            elif isinstance(value, Enum):
+            elif isinstance(value, Enum) and json_serialize is True:
                 value = value.code()
 
             ret_data[key] = value
@@ -75,9 +75,9 @@ class Model(db.Model):
                             ret_data[key] = None
                     else:
                         value = getattr(self, key)
-                        if isinstance(value, datetime):
+                        if isinstance(value, datetime) and json_serialize is True:
                             value = to_date_str(value, df)
-                        elif isinstance(value, Enum):
+                        elif isinstance(value, Enum) and json_serialize is True:
                             value = value.code()
 
                         ret_data[key] = value
@@ -219,7 +219,7 @@ class SoftableMixin:
 
     @declared_attr
     def deleted_by(cls):
-        return db.Column(db.Integer, db.ForeignKey('user.id'))
+        return db.Column(db.Integer)
 
     @staticmethod
     def before_delete(mapper, connection, instance):
