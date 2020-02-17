@@ -4,4 +4,4 @@ from xflask.server import Server
 
 setup_root_dir('xFlask')
 
-server = Server(db, conf_file='test/conf/server.yml', log_file='test/conf/logging.yml')
+server = Server(db, conf_file='test/conf/server.yml', log_file='test/conf/logging.yml', filters=None)

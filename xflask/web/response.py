@@ -23,3 +23,7 @@ class Response(object):
             return Response(code, data)
         else:
             return Response(StatusCode.SYS_ERROR, data)
+
+    @classmethod
+    def not_found(cls):
+        return Response(StatusCode.NOT_FOUND)
