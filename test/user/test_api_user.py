@@ -1,7 +1,7 @@
 from test.test_case import *
+from xflask.common.json_util import to_dict
 
-from main.model.user import User
-from main.type.edu_level import EducationLevel
+from main.controller.vo.user import *
 
 
 class TestApiUser(TestCase):
@@ -17,10 +17,10 @@ class TestApiUser(TestCase):
         print('\n', response.json)
 
     def test_create(self):
-        user = User(username='user1', password='123',
-                    email='user1@example.com', edu_level=EducationLevel.BACHELOR)
+        user = CreateUserVo(username='user1', password='123', role_id=1,
+                    email='user1@example.com')
 
-        response = self.client.post('/api/user', json=user.to_dict())
+        response = self.client.post('/api/user', json=to_dict(user, True))
 
         print('\n', response.json)
 

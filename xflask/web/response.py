@@ -18,7 +18,7 @@ class Response(object):
         return Response(StatusCode.SUCCESS, data)
 
     @classmethod
-    def fail(cls, data=None, code=None):
+    def fail(cls, code=None, data=None):
         if code is not None:
             return Response(code, data)
         else:

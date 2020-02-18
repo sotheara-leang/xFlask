@@ -2,7 +2,7 @@ from flask import Blueprint, request
 
 from xflask.web.response import Response
 from main.service.user import UserService
-from main.model.user import User
+from main.controller.vo.user import *
 
 
 bp = Blueprint('user', __name__, url_prefix='/api/user')
@@ -17,7 +17,7 @@ def get_all(user_service: UserService):
 
 @bp.route('/<user_id>')
 def get(user_id, user_service: UserService):
-    user = user_service.get_by_id(user_id)
+    user = user_service.get(user_id)
     if user is None:
         return Response.not_found().to_dict()
 
@@ -26,17 +26,17 @@ def get(user_id, user_service: UserService):
 
 @bp.route('', methods=['POST'])
 def create(user_service: UserService):
-    json = request.get_json()
-    user_service.create(**json)
+    data = CreateUserVo.load(request.get_json())
+    user_service.create(data)
+
     return Response.success().to_dict()
 
 
 @bp.route('', methods=['PUT'])
 def update(user_service: UserService):
-    json = request.get_json()
+    data = request.get_json()
 
     return Response.success().to_dict()
-
 
 @bp.route('/<user_id>', methods=['DELETE'])
 def delete(user_id, user_service: UserService):

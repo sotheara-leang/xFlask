@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate
+from marshmallow import fields, validate
 
 from xflask.web.vo import *
 

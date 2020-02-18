@@ -11,10 +11,10 @@ class TestServiceUser(TestCase):
 
     def test_get(self):
         user = self.user_service.get(43)
-        print(user)
+        print('\n',  user)
 
     def test_get_by_username(self):
         user = self.user_service.get_by_username('user1')
-        print(user)
+        print('\n', user)
 
 

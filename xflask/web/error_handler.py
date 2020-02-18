@@ -47,7 +47,7 @@ class SimpleErrorHandler(ErrorHandler):
     def handler_400(self, e):
         if request.path.startswith(self.api_route):
             if isinstance(e, ValidationError):
-                return Response(StatusCode.INVALID, e.messages).to_dict()
+                return Response.fail(StatusCode.INVALID, e.messages).to_dict()
             else:
                 return Response.fail(StatusCode.INVALID).to_dict()
         else:
