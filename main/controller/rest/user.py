@@ -2,7 +2,7 @@ from flask import Blueprint, request
 
 from xflask.web.response import Response
 from main.service.user import UserService
-from main.controller.vo.user import *
+from main.controller.vo.user import UserVo
 
 
 bp = Blueprint('user', __name__, url_prefix='/api/user')
@@ -26,15 +26,16 @@ def get(user_id, user_service: UserService):
 
 @bp.route('', methods=['POST'])
 def create(user_service: UserService):
-    data = CreateUserVo.load(request.get_json())
-    user_service.create(data)
+    user = UserVo.deserialize_as_dict(request.get_json(), exclude=['id'])
+    user_service.create(user)
 
     return Response.success().to_dict()
 
 
 @bp.route('', methods=['PUT'])
 def update(user_service: UserService):
-    data = request.get_json()
+    user = UserVo.deserialize_as_dict(request.get_json())
+    user_service.update(user)
 
     return Response.success().to_dict()
 

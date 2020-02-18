@@ -4,12 +4,12 @@ import enum
 from xflask.type import Enum as Enum
 
 
-def to_dict(obj, serialize_enum=False):
+def to_dict(obj, serialize=False):
     if isinstance(obj, Enum):
-        return obj.code() if serialize_enum is True else obj
+        return obj.code() if serialize is True else obj
 
     if isinstance(obj, enum.Enum):
-        return obj.value if serialize_enum is True else obj
+        return obj.value if serialize is True else obj
 
     if not hasattr(obj, "__dict__"):
         return obj
@@ -22,9 +22,9 @@ def to_dict(obj, serialize_enum=False):
         element = []
         if isinstance(val, list):
             for item in val:
-                element.append(to_dict(item, serialize_enum))
+                element.append(to_dict(item, serialize))
         else:
-            element = to_dict(val, serialize_enum)
+            element = to_dict(val, serialize)
 
         result[key] = element
 
@@ -33,8 +33,8 @@ def to_dict(obj, serialize_enum=False):
 def serialize(obj):
     return to_dict(obj, True)
 
-def to_json(obj):
-    return json.dumps(serialize(obj))
+def to_json(obj, **kwargs):
+    return json.dumps(serialize(obj), kwargs)
 
 
 if __name__ == '__main__':

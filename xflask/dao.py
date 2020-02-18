@@ -1,6 +1,7 @@
 from injector import inject
 from flask_sqlalchemy import SQLAlchemy
 
+from xflask.common.json_util import to_dict
 from xflask.component import Component
 from xflask.sqlalchemy import transactional
 
@@ -34,10 +35,9 @@ class Dao(Component):
     @transactional()
     def update(self, obj):
         if isinstance(obj, dict):
-            obj = self.model(**obj)
-            obj = self.merge(obj)
-
-        self.db.session.add(obj)
+            self.query().filter_by(id=obj['id']).update(obj)
+        else:
+            self.query().filter_by(id=obj.id).update(to_dict(obj))
 
     @transactional()
     def delete(self, obj):
