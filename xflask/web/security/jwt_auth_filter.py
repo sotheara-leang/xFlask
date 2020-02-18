@@ -8,7 +8,7 @@ from xflask.exception import Exception
 from xflask.type.status_code import StatusCode
 
 
-class AuthTokenFilter(Filter):
+class JwtAuthFilter(Filter):
 
     def __init__(self, open_routes=None):
         self.open_routes = open_routes or ['/api/login', '/static/<path:route>']

@@ -11,8 +11,8 @@ from werkzeug.utils import find_modules, import_string
 from xflask.common import get_root_dir, get_file
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
-from xflask.web.security.auth_manager import SimpleJWTAuthManager
-from xflask.web.security.auth_filter import AuthTokenFilter
+from xflask.web.security.jwt_auth_manager import JWTManager
+from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.error_handler import SimpleErrorHandler
 
 
@@ -23,9 +23,9 @@ class Server(object):
     DEF_LOG_FILE            = 'main/conf/logging.yml'
     DEF_BP_PKGS             = ['main.controller.rest']
     DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
-    DEF_FILTERS             = [AuthTokenFilter()]
+    DEF_FILTERS             = [JwtAuthFilter()]
     DEF_ERROR_HANDLER       = SimpleErrorHandler()
-    DEF_AUTH_MANAGER        = SimpleJWTAuthManager()
+    DEF_AUTH_MANAGER        = JWTManager()
 
     def __init__(self, db,
                  conf_file=DEF_CONF_FILE,
