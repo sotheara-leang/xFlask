@@ -11,6 +11,9 @@ class CrudService(Service):
     def __init__(self, dao: Dao):
         self.dao = dao
 
+    def exist(self, id):
+        return self.dao.exist(id)
+
     def get(self, id):
         return self.dao.get(id)
 

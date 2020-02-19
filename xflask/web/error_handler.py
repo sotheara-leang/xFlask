@@ -3,7 +3,7 @@ from flask import request
 from marshmallow.exceptions import ValidationError
 from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
 
-from xflask.exception import Exception
+from xflask.exception import Exception as Sys_Exception
 from xflask.type.status_code import StatusCode
 from xflask.web.response import Response
 
@@ -55,7 +55,8 @@ class SimpleErrorHandler(ErrorHandler):
 
     def handler_500(self, e):
         if request.path.startswith(self.api_route):
-            code = e.code if isinstance(e, Exception) else StatusCode.SYS_ERROR
+            code = e.code if isinstance(e, Sys_Exception) else StatusCode.SYS_ERROR
             return Response.fail(code).to_dict()
         else:
             return render_template(self.template + '500.html')
+

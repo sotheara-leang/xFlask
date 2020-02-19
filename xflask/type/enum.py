@@ -9,6 +9,9 @@ class Enum(enum.Enum):
     def desc(self):
         return self.value[1] if isinstance(self.value, tuple) else None
 
+    def type(self):
+        return type(self.value[0])
+
     @classmethod
     def value_of(cls, code):
         result = None

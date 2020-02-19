@@ -1,7 +1,7 @@
 from injector import inject
 from flask_sqlalchemy import SQLAlchemy
 
-from xflask.common.json_util import to_dict
+from xflask.common.obj_util import to_dict
 from xflask.component import Component
 from xflask.sqlalchemy import transactional
 
@@ -13,17 +13,20 @@ class Dao(Component):
         self.model = model
         self.db = db
 
+    def exist(self, id):
+        return self.query().filter_by(id=id).scalar() is not None
+
     def get(self, id):
         return self.query().get(id)
 
     def get_all(self):
         return self.query().all()
 
-    def query(self, models=None):
+    def query(self, **models):
         if models is None or len(models) == 0:
             return self.db.session.query(self.model)
         else:
-            return self.db.session.query(models)
+            return self.db.session.query(**models)
 
     @transactional()
     def insert(self, obj):

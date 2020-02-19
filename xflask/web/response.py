@@ -27,3 +27,7 @@ class Response(object):
     @classmethod
     def not_found(cls):
         return Response(StatusCode.NOT_FOUND)
+
+    @classmethod
+    def existed(cls):
+        return Response(StatusCode.EXISTED)

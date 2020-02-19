@@ -1,5 +1,5 @@
 from xflask.common.file_util import *
-from xflask.common.json_util import *
+from xflask.common.obj_util import *
 
 from flask import current_app
 

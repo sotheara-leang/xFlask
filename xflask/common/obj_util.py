@@ -4,6 +4,9 @@ import enum
 from xflask.type import Enum as Enum
 
 
+def get_attr(obj, attr_name):
+    return obj[attr_name] if isinstance(obj, dict) else getattr(obj, attr_name)
+
 def to_dict(obj, serialize=False):
     if isinstance(obj, Enum):
         return obj.code() if serialize is True else obj
