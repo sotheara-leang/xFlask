@@ -2,10 +2,9 @@ import logging
 from injector import inject
 from flask_jwt_extended import create_access_token
 
-from xflask.common.obj_util import get_attr
 from xflask.service import CrudService
 from xflask.exception import Exception
-from xflask.type.status_code import StatusCode
+from xflask.type.sys_code import SysCode
 
 from main.dao.user import UserDao
 from main.type.biz_code import BizCode
@@ -20,27 +19,25 @@ class UserService(CrudService):
         super(UserService, self).__init__(dao)
 
     def create(self, obj):
-        username = get_attr(obj, 'username')
+        username = obj.username
 
         user = self.dao.get_by_username(username)
         if user is not None:
             self._logger.error('user existed: username=%s', username)
-            raise Exception(StatusCode.EXISTED)
+            raise Exception(SysCode.EXISTED)
 
         super().create(obj)
 
     def update(self, obj):
-        id = get_attr(obj, 'id')
-
-        user = self.get(id)
+        user = self.get(obj.id)
         if user is None:
-            self._logger.error('user not found: id=%d', id)
-            raise Exception(StatusCode.NOT_FOUND)
+            self._logger.error('user not found: id=%d', obj.id)
+            raise Exception(SysCode.NOT_FOUND)
 
-        username = get_attr(obj, 'username')
+        username = obj.username
         if user.username != username and user.id != id:
-            self._logger.error('username existed: id=%d, username=%', id, username)
-            raise Exception(StatusCode.EXISTED)
+            self._logger.error('username existed: id=%d, username=%', obj.id, username)
+            raise Exception(BizCode.USER_NAME_EXISTED)
 
         super().update(obj)
 
@@ -52,7 +49,7 @@ class UserService(CrudService):
 
         if user.password != password:
             self._logger.error('password invalid: username=%s, password=%s', username, password)
-            raise Exception(BizCode.PWD_INVALID)
+            raise Exception(BizCode.USER_PWD_INVALID)
 
         token = create_access_token(identity=user.to_dict())
         return token

@@ -23,7 +23,7 @@ def requirement():
 setup(
     name='xFlask',
     packages=find_packages(),
-    version='0.0.4',
+    version='0.0.6',
     description='Python Web Framework',
     long_description=readme(),
     long_description_content_type='text/markdown',

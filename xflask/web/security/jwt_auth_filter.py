@@ -5,7 +5,7 @@ from werkzeug.routing import Map, Rule
 
 from xflask.web.filter import Filter
 from xflask.exception import Exception
-from xflask.type.status_code import StatusCode
+from xflask.type.sys_code import SysCode
 
 
 class JwtAuthFilter(Filter):
@@ -31,4 +31,4 @@ class JwtAuthFilter(Filter):
             try:
                 verify_jwt_in_request()
             except JWTExtendedException:
-                raise Exception(StatusCode.AUTH_INVALID)
+                raise Exception(SysCode.AUTH_INVALID)

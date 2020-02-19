@@ -1,6 +1,6 @@
 from xflask.common import to_dict
 from xflask.type import Enum
-from xflask.type.status_code import StatusCode
+from xflask.type.sys_code import SysCode
 
 
 class Response(object):
@@ -15,19 +15,19 @@ class Response(object):
 
     @classmethod
     def success(cls, data=None):
-        return Response(StatusCode.SUCCESS, data)
+        return Response(SysCode.SUCCESS, data)
 
     @classmethod
     def fail(cls, code=None, data=None):
         if code is not None:
             return Response(code, data)
         else:
-            return Response(StatusCode.SYS_ERROR, data)
+            return Response(SysCode.SYS_ERROR, data)
 
     @classmethod
     def not_found(cls):
-        return Response(StatusCode.NOT_FOUND)
+        return Response(SysCode.NOT_FOUND)
 
     @classmethod
     def existed(cls):
-        return Response(StatusCode.EXISTED)
+        return Response(SysCode.EXISTED)

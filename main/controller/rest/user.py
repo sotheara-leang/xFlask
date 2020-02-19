@@ -3,6 +3,7 @@ from flask import Blueprint, request
 from xflask.web.response import Response
 from main.service.user import UserService
 from main.controller.vo.user import UserVo
+from main.model.user import User
 
 
 bp = Blueprint('user', __name__, url_prefix='/api/user')
@@ -26,30 +27,27 @@ def get(user_id, user_service: UserService):
 
 @bp.route('', methods=['POST'])
 def create(user_service: UserService):
-    user = UserVo.deserialize_as_dict(request.get_json(), exclude=['id'])
+    data = UserVo.deserialize_as_dict(request.get_json(), exclude=['id'])
 
-    user_service.create(user)
+    user_service.create(User(**data))
 
     return Response.success().to_dict()
 
 
 @bp.route('', methods=['PUT'])
 def update(user_service: UserService):
-    user = UserVo.deserialize_as_dict(request.get_json())
+    data = UserVo.deserialize_as_dict(request.get_json())
 
-    if not user_service.exist(user['id']):
-        return Response.not_found().to_dict()
-
-    user_service.update(user)
+    user_service.update(User(**data))
 
     return Response.success().to_dict()
 
-@bp.route('/<user_id>', methods=['DELETE'])
+
+@bp.route('/<int:user_id>', methods=['DELETE'])
 def delete(user_id, user_service: UserService):
-    user = user_service.get_by_id(user_id)
-    if user is None:
+    if not user_service.exist(user_id):
         return Response.not_found().to_dict()
 
-    user_service.delete(user)
+    user_service.delete(user_id)
 
     return Response.success().to_dict()
