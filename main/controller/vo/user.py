@@ -1,20 +1,16 @@
-from marshmallow import Schema, fields, validate
+from marshmallow import fields, validate
 
-from xflask.web.vo import *
+from xflask.marshmallow import field
+from xflask.web.vo import Vo
 
-
-class CreateUserVo(Vo):
-
-    def __init__(self, username=None, password=None):
-        self.username = username
-        self.password = password
-
-    @classmethod
-    def schema(cls):
-        return Schema.from_dict({
-            'username': fields.Str(validate=validate.Length(min=2, max=50), required=True),
-            'password': fields.Str(validate=validate.Length(min=2, max=50), required=True)
-        })()
+from main.type.edu_level import EducationLevel
 
 
+class UserVo(Vo):
 
+    id          : fields.Int(required=True)
+    username    : fields.Str(validate=validate.Length(min=2, max=50), required=True)
+    password    : fields.Str(validate=validate.Length(min=2, max=50), required=True)
+    email       : fields.Email(required=True)
+    edu_level   : field.Enum(EducationLevel, required=True)
+    role_id     : fields.Int(required=True)

@@ -1,24 +1,20 @@
-from main.model.user import User
 from main.service.user import UserService
 from test.test_case import *
 
 
 class TestServiceUser(TestCase):
 
-    def test_get_user(self):
-        user_service = self.injector.get(UserService)
+    def setUp(self):
+        super().setUp()
 
-        user = user_service.get_user(123)
-        self.assertIsNone(user)
+        self.user_service = self.injector.get(UserService)
 
-    def test_create_user(self):
-        user_service = self.injector.get(UserService)
+    def test_get(self):
+        user = self.user_service.get(43)
+        print('\n',  user)
 
-        user = User(username='user1', email='user1@gmail.com', password='123')
+    def test_get_by_username(self):
+        user = self.user_service.get_by_username('user1')
+        print('\n', user)
 
-        user_service.create_user(user)
-
-        new_user = user_service.get_user_by_username('user1')
-
-        self.assertIs(user, new_user)
 

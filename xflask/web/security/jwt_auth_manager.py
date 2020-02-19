@@ -1,15 +1,9 @@
 from flask_jwt_extended import JWTManager, get_jwt_identity
 
+from .auth_manager import AuthManager
 
-class AuthManager(object):
 
-    def init(self, server):
-        pass
-
-    def get_current_user(self):
-        pass
-
-class SimpleJWTAuthManager(AuthManager):
+class JwtAuthManager(AuthManager):
 
     def init(self, server):
         JWTManager(server.app)

@@ -1,4 +1,5 @@
-from xflask.model import *
+from xflask import db
+from xflask.model import Model, AuditableMixin
 
 
 class Role(Model, AuditableMixin):

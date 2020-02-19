@@ -1,5 +1,6 @@
-from xflask.model import *
-from xflask.type import StringEnum
+from xflask import db
+from xflask.model import Model, AuditableMixin
+from xflask.sqlalchemy import StringEnum
 
 from main.type.edu_level import EducationLevel
 

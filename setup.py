@@ -12,6 +12,7 @@ def requirement():
         'Flask-Testing',
         'Flask-Injector',
         'Flask-JWT-Extended',
+        'Flask-Script',
         'Werkzeug==0.16.1',
         'marshmallow',
         'psycopg2-binary',
@@ -22,7 +23,7 @@ def requirement():
 setup(
     name='xFlask',
     packages=find_packages(),
-    version='0.0.3',
+    version='0.0.4',
     description='Python Web Framework',
     long_description=readme(),
     long_description_content_type='text/markdown',

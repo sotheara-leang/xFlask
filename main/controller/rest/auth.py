@@ -9,7 +9,7 @@ from main.controller.vo.auth import LoginVo
 
 @app.route('/api/login', methods=['POST'])
 def login(user_service: UserService):
-    login_vo = LoginVo.load(request.get_json())
+    login_vo = LoginVo.deserialize(request.get_json())
 
     token = user_service.auth(login_vo.username, login_vo.password)
 

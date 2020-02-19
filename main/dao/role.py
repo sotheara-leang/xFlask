@@ -1,3 +1,6 @@
+from injector import inject
+from flask_sqlalchemy import SQLAlchemy
+
 from xflask.dao import Dao
 
 from main.model.role import Role
@@ -5,12 +8,7 @@ from main.model.role import Role
 
 class RoleDao(Dao):
 
-    def get_roles(self):
-        return Role.query.all()
+    @inject
+    def __init__(self, db: SQLAlchemy):
+        super(RoleDao, self).__init__(Role, db)
 
-    def get_role(self, role_id):
-        return Role.query.get(role_id)
-
-    def create_role(self, role: Role):
-        self.add(role)
-        self.commit()

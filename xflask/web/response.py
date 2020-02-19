@@ -18,8 +18,16 @@ class Response(object):
         return Response(StatusCode.SUCCESS, data)
 
     @classmethod
-    def fail(cls, data=None, code=None):
+    def fail(cls, code=None, data=None):
         if code is not None:
             return Response(code, data)
         else:
             return Response(StatusCode.SYS_ERROR, data)
+
+    @classmethod
+    def not_found(cls):
+        return Response(StatusCode.NOT_FOUND)
+
+    @classmethod
+    def existed(cls):
+        return Response(StatusCode.EXISTED)
