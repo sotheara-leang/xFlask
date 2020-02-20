@@ -51,5 +51,5 @@ class UserService(CrudService):
             self._logger.error('password invalid: username=%s, password=%s', username, password)
             raise Exception(BizCode.USER_PWD_INVALID)
 
-        token = create_access_token(identity=user.to_dict())
+        token = create_access_token(identity=user.serialize())
         return token

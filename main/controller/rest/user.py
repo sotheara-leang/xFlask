@@ -1,53 +1,57 @@
-from flask import Blueprint, request
+from injector import inject
+from flask import request
 
+from xflask.classy import route
+from xflask.controller import Controller
 from xflask.web.response import Response
+
 from main.service.user import UserService
 from main.controller.vo.user import UserVo
 from main.model.user import User
 
 
-bp = Blueprint('user', __name__, url_prefix='/api/user')
+class UserController(Controller):
 
+    route_base = '/api/user'
 
-@bp.route('')
-def get_all(user_service: UserService):
-    users = user_service.get_all()
-    users = [e.serialize() for e in users]
-    return Response.success(users).to_dict()
+    @inject
+    def __init__(self, user_service: UserService):
+        self.user_service = user_service
 
+    @route('')
+    def get_all(self):
+        users = self.user_service.get_all()
+        return Response.success(users)
 
-@bp.route('/<user_id>')
-def get(user_id, user_service: UserService):
-    user = user_service.get(user_id)
-    if user is None:
-        return Response.not_found().to_dict()
+    @route('/<user_id>')
+    def get(self, user_id):
+        user = self.user_service.get(user_id)
+        if user is None:
+            return Response.not_found()
 
-    return Response.success(user.serialize()).to_dict()
+        return Response.success(user)
 
+    @route('', methods=['POST'])
+    def create(self):
+        data = UserVo.deserialize_as_dict(request.get_json(), exclude=['id'])
 
-@bp.route('', methods=['POST'])
-def create(user_service: UserService):
-    data = UserVo.deserialize_as_dict(request.get_json(), exclude=['id'])
+        self.user_service.create(User(**data))
 
-    user_service.create(User(**data))
+        return Response.success()
 
-    return Response.success().to_dict()
+    @route('', methods=['PUT'])
+    def update(self):
+        data = UserVo.deserialize_as_dict(request.get_json())
 
+        self.user_service.update(User(**data))
 
-@bp.route('', methods=['PUT'])
-def update(user_service: UserService):
-    data = UserVo.deserialize_as_dict(request.get_json())
+        return Response.success()
 
-    user_service.update(User(**data))
+    @route('/<int:user_id>', methods=['DELETE'])
+    def delete(self, user_id):
+        if not self.user_service.exist(user_id):
+            return Response.not_found().to_dict()
 
-    return Response.success().to_dict()
+        self.user_service.delete(user_id)
 
-
-@bp.route('/<int:user_id>', methods=['DELETE'])
-def delete(user_id, user_service: UserService):
-    if not user_service.exist(user_id):
-        return Response.not_found().to_dict()
-
-    user_service.delete(user_id)
-
-    return Response.success().to_dict()
+        return Response.success()

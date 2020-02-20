@@ -1,11 +1,13 @@
+import enum
+from datetime import datetime
+
 from xflask import db
-from xflask.model.serializer import EnumSerializer, DateTimeSerializer
+from xflask.type.enum import Enum
+from xflask.common.date_util import to_date_str
 
 
 class Model(db.Model):
     __abstract__ = True
-
-    _type_decorators = [EnumSerializer(), DateTimeSerializer()]
 
     def serialize(self, show=[], hide=[], dept=0):
         return self.to_dict(show, hide, dept, True)
@@ -24,13 +26,8 @@ class Model(db.Model):
                 continue
 
             value = getattr(self, key)
-
-            # decorator
             if serialize is True:
-                for decorator in self._type_decorators:
-                    if decorator.accept(value):
-                        value = decorator.serialize(value)
-                        break
+                value = self._custom_serialization(value)
 
             ret_data[key] = value
 
@@ -78,15 +75,19 @@ class Model(db.Model):
                             ret_data[key] = None
                     else:
                         value = getattr(self, key)
-
-                        # decorator
                         if serialize is True:
-                            for decorator in self._type_decorators:
-                                if decorator.accept(value):
-                                    value = decorator.serialize(value)
-                                    break
+                            value = self._custom_serialization(value)
 
                     ret_data[key] = value
 
         return ret_data
 
+    def _custom_serialization(self, obj):
+        if isinstance(obj, Enum):
+            return obj.code()
+        elif isinstance(obj, enum.Enum):
+            return obj.value
+        elif isinstance(obj, datetime):
+            return to_date_str(obj)
+        else:
+            return obj
