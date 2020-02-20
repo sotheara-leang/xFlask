@@ -23,7 +23,7 @@ class Server(object):
     DEF_CONF_FILE           = 'main/conf/server.yml'
     DEF_LOG_FILE            = 'main/conf/logging.yml'
     DEF_BLUEPRINT_PKGS      = []
-    DEF_CONTROLLER_PKGS     = ['main.controller.rest']
+    DEF_CONTROLLER_PKGS     = ['main.controller.mvc', 'main.controller.rest']
     DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
     DEF_FILTERS             = [JwtAuthFilter()]
     DEF_ERROR_HANDLER       = SimpleErrorHandler()
@@ -47,8 +47,6 @@ class Server(object):
         self._pre_init()
 
     def run(self):
-        self.init()
-
         self.app.run(self.conf.get('HOST'), self.conf.get('PORT'), use_reloader=False)
 
     def _pre_init(self):
@@ -90,7 +88,7 @@ class Server(object):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _init_app(self):
-        self.app = Flask(self.conf.get('APP_NAME'),
+        self.app = Flask(__name__,
                     static_folder=self.conf.get('STATIC_DIR'),
                     template_folder=self.conf.get('TEMPLATE_DIR'),
                     root_path=get_root_dir())
@@ -171,7 +169,7 @@ class Server(object):
                         except Exception as e:
                             self.logger.exception('fail to register component', e)
                 except Exception as e:
-                    self.logger.exception('fail to find component module in package: %s', package, e)
+                    self.logger.exception('fail to find component module in package: %s', package)
 
         self.flask_injector = FlaskInjector(app=self.app, modules=[configure])
 
@@ -204,4 +202,11 @@ class Server(object):
                     except Exception as e:
                         self.logger.error('fail to register controller', e)
             except Exception as e:
-                self.logger.error('fail to find controller module in package: %s', package, e)
+                self.logger.error('fail to find controller module in package: %s', package)
+
+        # display routes
+        if self.conf.get('DEBUG') is True:
+            routes = self.app.url_map._rules
+            max_len = max([len(route.rule) for route in routes])
+            for route in routes:
+                self.logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)

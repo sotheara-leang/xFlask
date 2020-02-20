@@ -7,12 +7,12 @@ from main.type.edu_level import EducationLevel
 class TestApiUser(TestCase):
 
     def test_get(self):
-        response = self.client.get('/api/user/49')
+        response = self.client.get('/api/user/68')
 
         print('\n', response.json)
 
     def test_get_all(self):
-        response = self.client.get('/api/user')
+        response = self.client.get('/api/user/')
 
         print('\n', response.json)
 
@@ -33,6 +33,6 @@ class TestApiUser(TestCase):
         print('\n', response.json)
 
     def test_delete(self):
-        response = self.client.delete('/api/user/49')
+        response = self.client.delete('/api/user/60')
 
         print('\n', response.json)

@@ -13,7 +13,7 @@ SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost/rnd-dm
 HOST: localhost
 PORT: 8000
 
-STATIC_DIR: main/resource/static
-TEMPLATE_DIR: main/resource/template
+STATIC_DIR: main/web/resource
+TEMPLATE_DIR: main/web/view
 
 LOGGING: true

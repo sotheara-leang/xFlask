@@ -5,3 +5,6 @@ class AuthManager(object):
 
     def get_current_user(self):
         pass
+
+    def logout(self):
+        pass
