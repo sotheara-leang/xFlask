@@ -4,5 +4,5 @@ from xflask.common import setup_root_dir
 
 setup_root_dir('xFlask')
 
-server = Server(db)
+server = Server(db, filters=None)
 app = server.app

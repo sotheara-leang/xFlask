@@ -1,7 +1,7 @@
 from xflask.type import Enum
 
 
-class StatusCode(Enum):
+class SysCode(Enum):
 
     SUCCESS          = '00000', 'Success'
     SYS_ERROR        = '10001', 'Internal Server Error'

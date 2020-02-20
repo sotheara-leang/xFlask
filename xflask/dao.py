@@ -45,7 +45,7 @@ class Dao(Component):
     @transactional()
     def delete(self, obj):
         if isinstance(obj, (int, float)):
-            self.query().filter_by(id=id).delete()
+            self.query().filter_by(id=obj).delete()
         else:
             self.db.session.delete(obj)
 

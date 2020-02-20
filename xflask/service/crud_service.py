@@ -1,9 +1,5 @@
-from xflask.component import Component
+from xflask.service import Service
 from xflask.dao import Dao
-
-
-class Service(Component):
-    ...
 
 
 class CrudService(Service):

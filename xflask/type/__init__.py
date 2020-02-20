@@ -1,3 +1,3 @@
 from .enum import *
-from .status_code import StatusCode
+from .sys_code import SysCode
 
