@@ -50,7 +50,7 @@ class UserController(Controller):
     @route('/<int:user_id>', methods=['DELETE'])
     def delete(self, user_id):
         if not self.user_service.exist(user_id):
-            return Response.not_found().to_dict()
+            return Response.not_found()
 
         self.user_service.delete(user_id)
 

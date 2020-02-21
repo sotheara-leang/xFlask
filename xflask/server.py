@@ -204,9 +204,10 @@ class Server(object):
             except Exception as e:
                 self.logger.error('fail to find controller module in package: %s', package)
 
-        # display routes
+        # display registered routes
         if self.conf.get('DEBUG') is True:
             routes = self.app.url_map._rules
-            max_len = max([len(route.rule) for route in routes])
-            for route in routes:
-                self.logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)
+            if routes is not None and len(routes) > 0:
+                max_len = max([len(route.rule) for route in routes])
+                for route in routes:
+                    self.logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)
