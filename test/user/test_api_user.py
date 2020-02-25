@@ -20,7 +20,7 @@ class TestApiUser(TestCase):
         user = UserVo(username='user1', password='123',
                       role_id=1, email='user1@example.com', edu_level=EducationLevel.MASTER)
 
-        response = self.client.post('/api/user', json=user.serialize_())
+        response = self.client.post('/api/user/', json=user.serialize_())
 
         print('\n', response.json)
 

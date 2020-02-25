@@ -88,7 +88,7 @@ class Server(object):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _init_app(self):
-        self.app = Flask(__name__,
+        self.app = Flask(self.conf.get('APP_NAME'),
                     static_folder=self.conf.get('STATIC_DIR'),
                     template_folder=self.conf.get('TEMPLATE_DIR'),
                     root_path=get_root_dir())
