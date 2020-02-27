@@ -35,7 +35,7 @@ class UserService(CrudService):
             raise Exception(SysCode.NOT_FOUND)
 
         username = obj.username
-        if user.username != username and user.id != id:
+        if user.username == username and user.id != id:
             self._logger.error('username existed: id=%d, username=%', obj.id, username)
             raise Exception(BizCode.USER_NAME_EXISTED)
 
@@ -45,7 +45,7 @@ class UserService(CrudService):
         user = self.dao.get_by_username(username)
         if user is None:
             self._logger.error('user not found: username=%s', username)
-            raise Exception(BizCode.USER_NOT_FOUND)
+            raise Exception(SysCode.NOT_FOUND)
 
         if user.password != password:
             self._logger.error('password invalid: username=%s, password=%s', username, password)

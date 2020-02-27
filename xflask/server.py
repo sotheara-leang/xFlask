@@ -154,6 +154,9 @@ class Server(object):
                                 obj = getattr(module, class_name)
 
                                 if issubclass(obj, Component):
+                                    if obj.abstract is True:
+                                        continue
+
                                     valid_module = True
 
                                     scope = singleton if obj.scope == 'singleton' else request
@@ -191,6 +194,9 @@ class Server(object):
                             controller = getattr(module, class_name)
 
                             if issubclass(controller, Controller):
+                                if controller.abstract is True:
+                                    continue
+
                                 valid_module = True
 
                                 try:
