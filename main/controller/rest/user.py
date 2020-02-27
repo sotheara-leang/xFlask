@@ -12,7 +12,7 @@ from main.model.user import User
 
 class UserController(Controller):
 
-    route_base = '/api/user'
+    route_base = '/api/user/'
 
     @inject
     def __init__(self, user_service: UserService):
@@ -23,7 +23,7 @@ class UserController(Controller):
         users = self.user_service.get_all()
         return Response.success(users)
 
-    @route('/<user_id>')
+    @route('<user_id>')
     def get(self, user_id):
         user = self.user_service.get(user_id)
         if user is None:
@@ -47,7 +47,7 @@ class UserController(Controller):
 
         return Response.success()
 
-    @route('/<int:user_id>', methods=['DELETE'])
+    @route('<int:user_id>', methods=['DELETE'])
     def delete(self, user_id):
         if not self.user_service.exist(user_id):
             return Response.not_found()
