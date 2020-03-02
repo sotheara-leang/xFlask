@@ -16,10 +16,13 @@ import re
 import sys
 
 from flask import request, Response, make_response
+from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
+
+from xflask.classy.annotation import *
 from xflask.common.obj_util import serialize
 from xflask.component import Component
-
+from xflask.web.vo import Vo
 
 _py2 = sys.version_info[0] == 2
 
@@ -209,11 +212,47 @@ class FlaskView(object):
 
             injected_args = {}
             for arg_name, arg_obj in view_args.items():
-                component = injector.get(arg_obj)
-                if not isinstance(component, Component):
+                if isinstance(arg_obj, Param):
+                    param = arg_obj.name
+                    arg_value = request.args if param is None else request.args.get(param)
+
+                elif isinstance(arg_obj, Header):
+                    header = arg_obj.name
+                    if header is None:
+                        arg_value = request.headers
+                    else:
+                        arg_value = request.headers.get(arg_obj.name)
+
+                elif isinstance(arg_obj, JsonBody) and request.is_json:
+                    body_type = arg_obj.type
+                    if body_type is None:
+                        arg_value = request.get_json()
+                    else:
+                        if issubclass(body_type, Vo):
+                            arg_value = body_type.deserialize(request.get_json(), arg_obj.exclude)
+                        else:
+                            arg_value = body_type(**request.get_json())
+
+                elif isinstance(arg_obj, FormBody):
+                    form_data = CombinedMultiDict((request.files, request.form)).to_dict()
+
+                    body_type = arg_obj.type
+                    if body_type is None:
+                        arg_value = form_data
+                    else:
+                        if issubclass(body_type, Vo):
+                            arg_value = body_type.deserialize(form_data, arg_obj.exclude)
+                        else:
+                            arg_value = body_type(**form_data)
+
+                elif inspect.isclass(arg_obj) and issubclass(arg_obj, Component):
+                    arg_value = injector.get(arg_obj)
+
+                else:
                     continue
 
-                injected_args[arg_name] = component
+                if arg_value is not None:
+                    injected_args[arg_name] = arg_value
 
             injected_args.update(request.view_args)
 

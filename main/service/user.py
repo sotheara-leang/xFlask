@@ -29,7 +29,7 @@ class UserService(CrudService):
         super().create(obj)
 
     def update(self, obj):
-        user = self.get(obj.id)
+        user = obj.id
         if user is None:
             self._logger.error('user not found: id=%d', obj.id)
             raise Exception(SysCode.NOT_FOUND)
