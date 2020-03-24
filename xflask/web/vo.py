@@ -19,7 +19,7 @@ class Vo(object):
     @classmethod
     def _get_schema(cls, exclude=[]):
         if not hasattr(cls, '__annotations__'):
-            raise Exception('%s has no annotations', cls.__name__)
+            raise Exception(cls.__name__ + ' has no annotations')
 
         annotations_map = {}
 

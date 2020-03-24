@@ -16,14 +16,13 @@ def requirement():
         'Werkzeug==0.16.1',
         'marshmallow',
         'psycopg2-binary',
-        'PyYAML',
-        'singleton-decorator'
+        'PyYAML'
     ]
 
 setup(
     name='xFlask',
     packages=find_packages(),
-    version='0.0.6',
+    version='0.0.9',
     description='Python Web Framework',
     long_description=readme(),
     long_description_content_type='text/markdown',

@@ -1,8 +1,8 @@
-from marshmallow import fields
+from xflask.marshmallow import Field
 from xflask.type import Enum
 
 
-class Enum(fields.Field):
+class Enum(Field):
 
     def __init__(self, enum_type: Enum, **kwargs):
         super().__init__(**kwargs)

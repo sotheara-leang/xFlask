@@ -35,3 +35,7 @@ class Response(object):
     @classmethod
     def existed(cls):
         return Response(SysCode.EXISTED)
+
+    @classmethod
+    def invalid(cls):
+        return Response(SysCode.INVALID)

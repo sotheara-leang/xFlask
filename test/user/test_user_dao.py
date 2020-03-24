@@ -1,7 +1,7 @@
+from test.test_case import TestCase
 from main.dao.user import UserDao
 from main.model.user import User
 from main.type.edu_level import EducationLevel
-from test.test_case import *
 
 
 class TestUserDao(TestCase):

@@ -8,7 +8,7 @@ SECRET_KEY: AAAAAA
 JWT_SECRET_KEY: BBBBBB
 
 SQLALCHEMY_TRACK_MODIFICATIONS: false
-SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost/rnd-dm
+SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost/xflask
 
 HOST: localhost
 PORT: 8000

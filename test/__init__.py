@@ -1,7 +1,9 @@
-from xflask import *
 from xflask.common import setup_root_dir
-from xflask.server import Server
+from xflask.application import Application
+from xflask.sqlalchemy import db
+from xflask.web.filter.api_logging_filter import ApiLoggingFilter
+
 
 setup_root_dir('xFlask')
 
-server = Server(db, conf_file='test/conf/server.yml', log_file='test/conf/logging.yml', filters=None)
+server = Application(db, conf_file='test/conf/server.yml', filters=[ApiLoggingFilter()])

@@ -7,7 +7,7 @@ from main.type.edu_level import EducationLevel
 class TestApiUser(TestCase):
 
     def test_get(self):
-        response = self.client.get('/api/user/68')
+        response = self.client.get('/api/user/60')
 
         print('\n', response.json)
 
@@ -20,7 +20,7 @@ class TestApiUser(TestCase):
         user = UserVo(username='user1', password='123',
                       role_id=1, email='user1@example.com', edu_level=EducationLevel.MASTER)
 
-        response = self.client.post('/api/user', json=user.serialize_())
+        response = self.client.post('/api/user/', json=user.serialize_())
 
         print('\n', response.json)
 
@@ -28,7 +28,7 @@ class TestApiUser(TestCase):
         user = UserVo(id=60, username='user1', password='12345',
                       role_id=1, email='new@example.com', edu_level=EducationLevel.BACHELOR)
 
-        response = self.client.put('/api/user', json=user.serialize_())
+        response = self.client.put('/api/user/', json=user.serialize_())
 
         print('\n', response.json)
 

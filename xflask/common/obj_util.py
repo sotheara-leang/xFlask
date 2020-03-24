@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime
+
 from xflask.common.date_util import to_date_str
 from xflask.type import Enum as Enum
 
@@ -8,7 +9,7 @@ def get_attr(obj, attr_name):
     return obj[attr_name] if isinstance(obj, dict) else getattr(obj, attr_name)
 
 def to_dict(obj):
-    if not hasattr(obj, '__dict__'):
+    if not hasattr(obj, '__dict__') or isinstance(obj, enum.Enum):
         return obj
 
     result = {}
@@ -58,23 +59,15 @@ def serialize(obj, show=[], hidden=[], dept=0):
 
         element = []
         if isinstance(val, list):
-            if dept > 0:
-                item_show = [e.split('.')[1] for e in show if e.split('.')[0] == key]
-                item_hidden = [e.split('.')[1] for e in hidden if e.split('.')[0] == key]
-            else:
-                item_show = show
-                item_hidden = hidden
+            item_show = [e.split('.')[1] for e in show if e.split('.')[0] == key] if dept > 0 else show
+            item_hidden = [e.split('.')[1] for e in hidden if e.split('.')[0] == key] if dept > 0 else hidden
 
             for item in val:
                 element.append(serialize(item, item_show, item_hidden, dept + 1))
 
         elif hasattr(val, 'serialize'):
-            if dept > 0:
-                item_show = [e.split('.')[1] for e in show if e.split('.')[0] == key]
-                item_hidden = [e.split('.')[1] for e in hidden if e.split('.')[0] == key]
-            else:
-                item_show = show
-                item_hidden = hidden
+            item_show = [e.split('.')[1] for e in show if e.split('.')[0] == key] if dept > 0 else show
+            item_hidden = [e.split('.')[1] for e in hidden if e.split('.')[0] == key] if dept > 0 else hidden
 
             element = serialize(val, item_show, item_hidden, dept + 1)
         else:

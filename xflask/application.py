@@ -1,11 +1,11 @@
 import inspect
 import logging
+import sys
 
 from flask import Flask
 from flask_injector import FlaskInjector, request
 from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
-from singleton_decorator import singleton as singleton_
 from werkzeug.utils import find_modules, import_string
 
 from xflask.common import get_root_dir, get_file
@@ -18,8 +18,7 @@ from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.error_handler import SimpleErrorHandler
 
 
-@singleton_
-class Server(object):
+class Application(object):
     DEF_CONF_FILE           = 'main/conf/server.yml'
     DEF_LOG_FILE            = 'main/conf/logging.yml'
     DEF_BLUEPRINT_PKGS      = []
@@ -88,7 +87,7 @@ class Server(object):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _init_app(self):
-        self.app = Flask(__name__,
+        self.app = Flask(self.conf.get('APP_NAME'),
                     static_folder=self.conf.get('STATIC_DIR'),
                     template_folder=self.conf.get('TEMPLATE_DIR'),
                     root_path=get_root_dir())
@@ -141,72 +140,88 @@ class Server(object):
             # component
             for package in self.component_pkgs:
                 try:
+                    self.logger.debug('>>> Scan modules in %s', package)
+
                     for pkg_name in find_modules(package):
                         try:
                             module = import_string(pkg_name)
+                            class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == module.__name__]
 
                             valid_module = False
-
-                            class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
-                                           m[1].__module__ == module.__name__]
                             for class_name in class_names:
                                 obj = getattr(module, class_name)
 
                                 if issubclass(obj, Component):
+                                    if obj.abstract is True:
+                                        continue
+
                                     valid_module = True
 
                                     scope = singleton if obj.scope == 'singleton' else request
                                     binder.bind(obj, obj, scope)
 
-                                    self.logger.debug('register component: %s', class_name)
+                                    self.logger.debug('Register component: %s', class_name)
                                 else:
                                     del module
-                                    self.logger.debug('skip component: %s', class_name)
+                                    self.logger.debug('!!! Invalid component: %s', class_name)
 
                             if not valid_module:
                                 del module
 
                         except Exception as e:
-                            self.logger.exception('fail to register component', e)
-                except Exception as e:
-                    self.logger.exception('fail to find component module in package: %s', package)
+                            self.logger.exception('!!! Failed to initialize component in %s', pkg_name)
+                            sys.exit()
+
+                except Exception:
+                    self.logger.debug('!!! No modules founded in %s', package)
 
         self.flask_injector = FlaskInjector(app=self.app, modules=[configure])
 
     def _register_controllers(self):
         for package in self.controller_pkgs:
             try:
-                for pkg_name in find_modules(package):
+                self.logger.debug('>>> Scan modules in %s', package)
+
+                for module_ns in find_modules(package):
                     try:
-                        module = import_string(pkg_name)
+                        module = import_string(module_ns)
+                        class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == module.__name__]
 
                         valid_module = False
-
-                        class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
-                                       m[1].__module__ == module.__name__]
                         for class_name in class_names:
                             controller = getattr(module, class_name)
 
                             if issubclass(controller, Controller):
+                                if controller.abstract is True:
+                                    continue
+
                                 valid_module = True
 
-                                controller.register(self.app, self.flask_injector.injector)
+                                try:
+                                    controller.register(self.app, self.flask_injector.injector)
+                                except Exception:
+                                    self.logger.exception('Failed to initialize controller: %s', class_name)
+                                    sys.exit()
 
-                                self.logger.debug('register controller: %s', class_name)
+                                self.logger.debug('Register controller: %s', class_name)
                             else:
-                                self.logger.debug('skip controller: %s', class_name)
+                                self.logger.debug('!!! Invalid controller: %s', class_name)
 
                         if not valid_module:
                             del module
 
-                    except Exception as e:
-                        self.logger.error('fail to register controller', e)
-            except Exception as e:
-                self.logger.error('fail to find controller module in package: %s', package)
+                    except Exception:
+                        self.logger.exception('!!! Failed to initialize controller in %s', module_ns)
+                        sys.exit()
 
-        # display routes
-        if self.conf.get('DEBUG') is True:
-            routes = self.app.url_map._rules
+            except Exception:
+                self.logger.debug('!!! No modules found in %s', package)
+
+        # display registered routes
+        self.logger.debug('>>> Registered routes:')
+
+        routes = self.app.url_map._rules
+        if routes is not None and len(routes) > 0:
             max_len = max([len(route.rule) for route in routes])
             for route in routes:
                 self.logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)

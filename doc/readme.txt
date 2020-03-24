@@ -36,4 +36,4 @@ python -m main.server
 
 FLASK_APP=main.server:app python -m flask run -p 8000
 
-gunicorn main.server:app
+gunicorn --bind 0.0.0.0:5000 main.server:app
