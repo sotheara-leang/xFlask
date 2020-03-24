@@ -6,7 +6,6 @@ from flask import Flask
 from flask_injector import FlaskInjector, request
 from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
-from singleton_decorator import singleton as singleton_
 from werkzeug.utils import find_modules, import_string
 
 from xflask.common import get_root_dir, get_file
@@ -19,8 +18,7 @@ from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.error_handler import SimpleErrorHandler
 
 
-@singleton_
-class Server(object):
+class Application(object):
     DEF_CONF_FILE           = 'main/conf/server.yml'
     DEF_LOG_FILE            = 'main/conf/logging.yml'
     DEF_BLUEPRINT_PKGS      = []

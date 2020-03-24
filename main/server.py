@@ -1,15 +1,12 @@
-from xflask import *
-from xflask.server import Server
-from xflask.common import setup_root_dir
-
+from xflask.application import Application
 from xflask.web.filter.api_logging_filter import ApiLoggingFilter
+from xflask.sqlalchemy import db
 
-setup_root_dir('xFlask')
+from main import *
 
-server = Server(db, filters=[ApiLoggingFilter()])
-server.init()
 
-app = server.app
+application = Application(db, filters=[ApiLoggingFilter()])
+application.init()
 
 if __name__ == '__main__':
-    server.run()
+    application.run()

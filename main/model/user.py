@@ -1,20 +1,20 @@
-from xflask import db
-from xflask.model import Model, AuditableMixin
-from xflask.sqlalchemy import StringEnum
+from xflask.sqlalchemy import Column, ForeignKey
+from xflask.sqlalchemy import Integer, String, StringEnum
+from xflask.sqlalchemy.model import AuditModel
 
 from main.type.edu_level import EducationLevel
 
 
-class User(Model, AuditableMixin):
+class User(AuditModel):
 
-    id          = db.Column(db.Integer, primary_key=True)
-    username    = db.Column(db.String(50), unique=True, nullable=False)
-    password    = db.Column(db.String(50), unique=False, nullable=False)
-    email       = db.Column(db.String(120), unique=True, nullable=False)
+    id          = Column(Integer, primary_key=True)
+    username    = Column(String(50), unique=True, nullable=False)
+    password    = Column(String(50), unique=False, nullable=False)
+    email       = Column(String(120), unique=True, nullable=False)
 
-    edu_level   = db.Column(StringEnum(EducationLevel), nullable=False)
+    edu_level   = Column(StringEnum(EducationLevel), nullable=False)
 
-    role_id     = db.Column(db.Integer, db.ForeignKey('role.id'))
+    role_id     = Column(Integer, ForeignKey('role.id'))
 
     _hidden_fields = [
         'password',

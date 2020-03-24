@@ -1,13 +1,13 @@
-from xflask import db
-from xflask.server import Server
-from xflask.common import setup_root_dir
+from xflask.application import Application
 from xflask.migrate import Migration
+from xflask.sqlalchemy import db
 
-setup_root_dir('xFlask')
+from main import *
 
-server = Server(db, filters=None)
 
-migration = Migration(server, ['main.model'])
+application = Application(db, filters=None)
+
+migration = Migration(application, ['main.model'])
 
 if __name__ == '__main__':
     migration.run()

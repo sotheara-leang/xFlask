@@ -1,10 +1,10 @@
-from xflask import db
-from xflask.model import Model, AuditableMixin
+from xflask.sqlalchemy import Column, relationship
+from xflask.sqlalchemy import Integer, String
+from xflask.sqlalchemy.model import AuditModel
 
 
-class Role(Model, AuditableMixin):
+class Role(AuditModel):
 
-    id      = db.Column(db.Integer, primary_key=True)
-    name    = db.Column(db.String(50), unique=False, nullable=False)
-
-    users   = db.relationship('User', backref='role', lazy=True)
+    id      = Column(Integer, primary_key=True)
+    name    = Column(String(50), unique=False, nullable=False)
+    users   = relationship('User', backref='role', lazy=True)
