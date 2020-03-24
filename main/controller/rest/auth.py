@@ -1,7 +1,7 @@
-from flask import request
+from injector import inject
 
 from xflask.web.response import Response
-from xflask.classy import route
+from xflask.classy import route, JsonBody
 from xflask.controller import Controller
 
 from main.service.user import UserService
@@ -10,11 +10,13 @@ from main.controller.vo.auth import LoginVo
 
 class AuthController(Controller):
 
-    @route('/api/login', methods=['POST'])
-    def login(self, user_service: UserService):
-        login_vo = LoginVo.deserialize(request.get_json())
+    @inject
+    def __init__(self, user_service: UserService):
+        self.user_service = user_service
 
-        token = user_service.auth(login_vo.username, login_vo.password)
+    @route('/api/login', methods=['POST'])
+    def login(self, login_vo: JsonBody(LoginVo)):
+        token = self.user_service.auth(login_vo.username, login_vo.password)
 
         return Response.success({'token': token})
 

@@ -1,7 +1,6 @@
 from injector import inject
-from flask import request
 
-from xflask.classy import route
+from xflask.classy import route, JsonBody
 from xflask.controller import Controller
 from xflask.web.response import Response
 
@@ -32,18 +31,14 @@ class UserController(Controller):
         return Response.success(user)
 
     @route('', methods=['POST'])
-    def create(self):
-        data = UserVo.deserialize_as_dict(request.get_json(), exclude=['id'])
-
-        self.user_service.create(User(**data))
+    def create(self, user: JsonBody(UserVo, exclude=['id'])):
+        self.user_service.create(User(**user.__dict__))
 
         return Response.success()
 
     @route('', methods=['PUT'])
-    def update(self):
-        data = UserVo.deserialize_as_dict(request.get_json())
-
-        self.user_service.update(User(**data))
+    def update(self, user: JsonBody(UserVo)):
+        self.user_service.update(User(**user))
 
         return Response.success()
 

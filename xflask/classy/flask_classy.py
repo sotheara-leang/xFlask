@@ -22,6 +22,7 @@ from werkzeug.routing import parse_rule
 from xflask.classy.annotation import *
 from xflask.common.obj_util import serialize
 from xflask.component import Component
+from xflask.marshmallow import ValidationError
 from xflask.web.vo import Vo
 
 _py2 = sys.version_info[0] == 2
@@ -212,10 +213,14 @@ class FlaskView(object):
 
             injected_args = {}
             for arg_name, arg_obj in view_args.items():
+                # Param
                 if isinstance(arg_obj, Param):
                     param = arg_obj.name
                     arg_value = request.args if param is None else request.args.get(param)
 
+                    if arg_obj.required is True and not arg_value:
+                        raise ValidationError("Parameter %s is missing" % param)
+                # Header
                 elif isinstance(arg_obj, Header):
                     header = arg_obj.name
                     if header is None:
@@ -223,16 +228,27 @@ class FlaskView(object):
                     else:
                         arg_value = request.headers.get(arg_obj.name)
 
-                elif isinstance(arg_obj, JsonBody) and request.is_json:
-                    body_type = arg_obj.type
-                    if body_type is None:
-                        arg_value = request.get_json()
-                    else:
-                        if issubclass(body_type, Vo):
-                            arg_value = body_type.deserialize(request.get_json(), arg_obj.exclude)
+                    if arg_obj.required is True and not arg_value:
+                        raise ValidationError("Header %s is missing" % header)
+                # Json
+                elif request.is_json is True:
+                    if isinstance(arg_obj, JsonBody):
+                        body_type = arg_obj.type
+                        if body_type is None:
+                            arg_value = request.get_json()
                         else:
-                            arg_value = body_type(**request.get_json())
+                            if issubclass(body_type, Vo):
+                                arg_value = body_type.deserialize(request.get_json(), arg_obj.exclude)
+                            else:
+                                arg_value = body_type(**request.get_json())
 
+                    elif isinstance(arg_obj, JsonField):
+                        field = arg_obj.name
+                        arg_value = request.get_json()
+
+                        if arg_obj.required is True and not arg_value or not arg_value.get(field):
+                            raise ValidationError("Field %s is missing" % field)
+                # Form
                 elif isinstance(arg_obj, FormBody):
                     form_data = CombinedMultiDict((request.files, request.form)).to_dict()
 
@@ -244,6 +260,13 @@ class FlaskView(object):
                             arg_value = body_type.deserialize(form_data, arg_obj.exclude)
                         else:
                             arg_value = body_type(**form_data)
+
+                elif isinstance(arg_obj, FormField):
+                    field = arg_obj.name
+                    form_data = CombinedMultiDict((request.files, request.form)).to_dict()
+
+                    if arg_obj.required is True and not form_data or not form_data.get(field):
+                        raise ValidationError("Field %s is missing" % field)
 
                 elif inspect.isclass(arg_obj) and issubclass(arg_obj, Component):
                     arg_value = injector.get(arg_obj)
@@ -261,7 +284,7 @@ class FlaskView(object):
             # >>> prepare response
 
             if not isinstance(response, dict) and not isinstance(response, str) \
-                    and not isinstance(response, tuple) and not isinstance(response, Response):  # TODO: or WSGI callable
+                    and not isinstance(response, tuple) and not isinstance(response, Response):
                 response = serialize(response)
 
             if not isinstance(response, Response):
