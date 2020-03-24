@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from xflask.common.date_util import to_date_str
+from xflask.common.util.date_util import to_date_str
 from xflask.type import Enum as Enum
 
 

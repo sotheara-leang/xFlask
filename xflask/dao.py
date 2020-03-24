@@ -1,4 +1,4 @@
-from xflask.common.obj_util import to_dict
+from xflask.common.util.obj_util import to_dict
 from xflask.component import Component
 from xflask.sqlalchemy import db, transactional
 

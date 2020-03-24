@@ -1,4 +1,4 @@
-from xflask.common import setup_root_dir
+from xflask.common.util import setup_root_dir
 from xflask.application import Application
 from xflask.sqlalchemy import db
 from xflask.web.filter.api_logging_filter import ApiLoggingFilter

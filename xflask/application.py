@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
 from werkzeug.utils import find_modules, import_string
 
-from xflask.common import get_root_dir, get_file
+from xflask.common.util import get_root_dir, get_file
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
 from xflask.component import Component
