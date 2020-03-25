@@ -1,3 +1,3 @@
-from xflask.common.util import setup_root_dir
+from xflask.common.util import setup_env
 
-setup_root_dir('xFlask')
+setup_env('xFlask')

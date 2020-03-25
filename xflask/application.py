@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
 from werkzeug.utils import find_modules, import_string
 
-from xflask.common.util import get_root_dir, get_file
+from xflask.common.util import get_root_dir, get_file_path, get_xflask_path
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
 from xflask.component import Component
@@ -19,8 +19,8 @@ from xflask.web.error_handler import SimpleErrorHandler
 
 
 class Application(object):
-    DEF_CONF_FILE           = 'main/conf/server.yml'
-    DEF_LOG_FILE            = 'main/conf/logging.yml'
+    DEF_CONF_FILE           = 'conf/server.yml'
+    DEF_LOG_FILE            = 'conf/logging.yml'
     DEF_BLUEPRINT_PKGS      = []
     DEF_CONTROLLER_PKGS     = ['main.controller.mvc', 'main.controller.rest']
     DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
@@ -28,13 +28,12 @@ class Application(object):
     DEF_ERROR_HANDLER       = SimpleErrorHandler()
     DEF_AUTH_MANAGER        = JwtAuthManager()
 
-    def __init__(self, db, conf_file=DEF_CONF_FILE, log_file=DEF_LOG_FILE,
+    def __init__(self, db, conf_file=None,
                  component_pkgs=DEF_COMPONENT_PKGS, controller_pkgs=DEF_CONTROLLER_PKGS, blueprint_pkgs=DEF_BLUEPRINT_PKGS,
                  filters=DEF_FILTERS, error_handler=DEF_ERROR_HANDLER, auth_manager=DEF_AUTH_MANAGER):
 
         self.db                 = db
-        self.conf_file          = conf_file
-        self.log_file           = log_file
+        self.conf_file          = conf_file or get_file_path('main/conf/server.yml')
         self.component_pkgs     = component_pkgs
         self.blueprint_pkgs     = blueprint_pkgs
         self.controller_pkgs    = controller_pkgs
@@ -45,8 +44,10 @@ class Application(object):
 
         self._pre_init()
 
-    def run(self):
-        self.app.run(self.conf.get('HOST'), self.conf.get('PORT'), use_reloader=False)
+    def run(self, host=None, port=None):
+        host = host or self.conf.get('HOST')
+        port = port or self.conf.get('PORT')
+        self.app.run(host, port, use_reloader=False)
 
     def _pre_init(self):
         self._init_config()
@@ -73,16 +74,19 @@ class Application(object):
         self._register_blueprints()
 
     def _init_config(self):
-        self.conf_file = self.conf_file or self.DEF_CONF_FILE
-        self.conf = Configuration(get_file(self.conf_file))
+        self.conf = Configuration(get_xflask_path(self.DEF_CONF_FILE))
+        if self.conf_file is not None:
+            self.conf.merge(self.conf_file)
 
     def _init_logging(self):
-        self.log_file = self.log_file or self.DEF_LOG_FILE
-
-        if self.log_file is None or self.conf.get('LOGGING') is False:
+        if self.conf.get('LOGGING') is False:
             logging.basicConfig(level=logging.DEBUG)
         else:
-            Logger(get_file(self.log_file))
+            self.logger = Logger(get_xflask_path(self.DEF_LOG_FILE))
+
+            log_file = self.conf.get('LOGGING_CONF_FILE')
+            if log_file is not None:
+                self.logger.merge(log_file)
 
         self.logger = logging.getLogger(self.__class__.__name__)
 

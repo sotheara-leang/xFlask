@@ -1,41 +1,24 @@
 import collections
 import logging.config
 import os
-import re
 
-import yaml
+from xflask.common.util import load_config, merge_dict
 
 
 class Logger(object):
 
-    def __init__(self, log_file):
-        with open(log_file, 'r') as f:
-            param_matcher = re.compile(r'.*\$\{([^}^{]+)\}.*')
+    def __init__(self, conf_file):
+        self.config = load_config(conf_file)
 
-            def param_constructor(loader, node):
-                value = node.value
+        self.init_log_dir(self.config)
 
-                params = param_matcher.findall(value)
-                for param in params:
-                    try:
-                        param_value = os.environ[param]
-                        return value.replace('${' + param + '}', param_value)
-                    except Exception:
-                        pass
+        logging.config.dictConfig(self.config)
 
-                return value
+    def merge(self, conf_file):
+        config = load_config(conf_file)
+        merge_dict(self.config, config)
 
-            class VariableLoader(yaml.SafeLoader):
-                pass
-
-            VariableLoader.add_implicit_resolver('!param', param_matcher, None)
-            VariableLoader.add_constructor('!param', param_constructor)
-
-            config = yaml.load(f.read(), Loader=VariableLoader)
-
-            self.init_log_dir(config)
-
-            logging.config.dictConfig(config)
+        logging.config.dictConfig(self.config)
 
     def init_log_dir(self, dict_):
         for k, v in dict_.items():

@@ -1,32 +1,31 @@
 import os
-import sys
-import importlib
+import xflask
 
 
 def get_root_dir():
     return os.environ['PROJ_HOME']
 
-def get_file(file):
+def path_exist(path):
+    return os.path.exists(path)
+
+def is_dir(path):
+    return os.path.isdir(path)
+
+def is_file(path):
+    return os.path.isfile(path)
+
+def get_dir_path(path):
+    return os.path.dirname(path)
+
+def get_dir_name(path):
+    return get_file_name(get_dir_path(path))
+
+def get_file_path(file):
     return os.path.join(get_root_dir(), file)
 
-def import_modules(root_dir, model_pkgs):
-    for model_pkg in model_pkgs:
-        for module in os.listdir(root_dir + '/' + model_pkg.replace('.', '/')):
-            if module == '__init__.py' or module[-3:] != '.py':
-                continue
+def get_file_name(path):
+    return os.path.basename(path)
 
-            model_namespace = model_pkg + '.' + module[:-3]
-
-            importlib.import_module(model_namespace)
-
-def setup_root_dir(root_dir_name):
-    cur_dir = os.getcwd()
-    while True:
-        if os.path.basename(cur_dir) == root_dir_name:
-            root_dir = cur_dir
-            break
-        else:
-            cur_dir = os.path.dirname(cur_dir)
-
-    os.environ['PROJ_HOME'] = root_dir
-    sys.path.append(root_dir)
+def get_xflask_path(path=None):
+    xflask_dir = get_dir_path(xflask.__file__)
+    return os.path.join(xflask_dir, path)

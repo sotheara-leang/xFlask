@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime
+import collections
 
 from xflask.common.util.date_util import to_date_str
 from xflask.type import Enum as Enum
@@ -76,3 +77,26 @@ def serialize(obj, show=[], hidden=[], dept=0):
         result[key] = element
 
     return result
+
+
+### DICT ###
+
+def merge_dict(obj_dict: dict, merge_dct: dict):
+    for k, v in iter(merge_dct.items()):
+        if k in obj_dict and isinstance(obj_dict[k], dict) and isinstance(merge_dct[k], dict):
+            merge_dict(obj_dict[k], merge_dct[k])
+        else:
+            obj_dict[k] = merge_dct[k]
+
+
+def update_dict(obj_dict, key, value):
+    _key = key.split(':')[0]
+    _next_key = ''.join(key.split(':')[1:])
+
+    for k, v in obj_dict.items():
+        if k == _key:
+            if isinstance(v, collections.Mapping):
+                update_dict(v, _next_key, value)
+            else:
+                if type(value) == type(v):
+                    obj_dict[_key] = value
