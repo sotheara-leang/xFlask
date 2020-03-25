@@ -1,21 +1,24 @@
+### FLASK ###
 APP_NAME: flask-server
-
-DEBUG: true
-ENV: development
-TESTING: true
-
-SECRET_KEY: AAAAAA
-
-JWT_SECRET_KEY: BBBBBB
-
-SQLALCHEMY_ECHO: true
-SQLALCHEMY_TRACK_MODIFICATIONS: false
-SQLALCHEMY_DATABASE_URI: sqlite:///
 
 HOST: localhost
 PORT: 8000
 
-STATIC_DIR: main/resource/static
-TEMPLATE_DIR: main/resource/template
+DEBUG: true
+ENV: development
+
+SECRET_KEY: AAAAAA
+
+STATIC_DIR: main/web/resource
+
+TEMPLATE_DIR: main/web/view
 
 LOGGING: true
+LOGGING_CONF_FILE: ${PROJ_HOME}/main/conf/logging.yml
+
+### JWT ###
+JWT_SECRET_KEY: BBBBBB
+
+### SQLALCHEMY ###
+SQLALCHEMY_TRACK_MODIFICATIONS: false
+SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost/xflask

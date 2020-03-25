@@ -26,11 +26,11 @@ class ErrorHandler(object):
 
 class SimpleErrorHandler(ErrorHandler):
     DEF_API_ROUTE = '/api'
-    DEF_TEMPLATE = ''
+    DEF_TEMPLATE_FOLDER = ''
 
-    def __init__(self, api_route=DEF_API_ROUTE, template=DEF_TEMPLATE):
+    def __init__(self, api_route=DEF_API_ROUTE, template_folder=DEF_TEMPLATE_FOLDER):
         self.api_route = api_route
-        self.template = template
+        self.template_folder = template_folder
 
     def init(self, server):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -47,7 +47,7 @@ class SimpleErrorHandler(ErrorHandler):
         if request.path.startswith(self.api_route):
             return Response.fail(SysCode.NOT_FOUND).to_dict()
         else:
-            return render_template(self.template + '404.html')
+            return render_template(self.template_folder + '404.html')
 
     def handler_400(self, e):
         self.logger.exception('400 error')
@@ -58,7 +58,7 @@ class SimpleErrorHandler(ErrorHandler):
             else:
                 return Response.fail(SysCode.INVALID).to_dict()
         else:
-            return render_template(self.template + '400.html')
+            return render_template(self.template_folder + '400.html')
 
     def handler_500(self, e):
         self.logger.exception('500 error')
@@ -67,5 +67,5 @@ class SimpleErrorHandler(ErrorHandler):
             code = e.code if isinstance(e, Sys_Exception) else SysCode.SYS_ERROR
             return Response.fail(code).to_dict()
         else:
-            return render_template(self.template + '500.html')
+            return render_template(self.template_folder + '500.html')
 

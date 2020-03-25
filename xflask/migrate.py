@@ -1,8 +1,8 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 
-from xflask import db
-from xflask.common import get_root_dir, import_modules
+from xflask.common.util import get_root_dir, import_modules
+from xflask.sqlalchemy import db
 
 
 class Migration(object):
