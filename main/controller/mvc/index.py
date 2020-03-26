@@ -1,5 +1,4 @@
-from flask import render_template
-
+from xflask import render_template
 from xflask.classy import route
 from xflask.controller import Controller
 

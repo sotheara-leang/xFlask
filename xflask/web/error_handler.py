@@ -14,13 +14,13 @@ class ErrorHandler(object):
     def init(self, server):
         pass
 
-    def handler_404(self, e):
+    def handle_404(self, e):
         pass
 
-    def handler_400(self, e):
+    def handle_400(self, e):
         pass
 
-    def handler_500(self, e):
+    def handle_500(self, e):
         pass
 
 
@@ -35,13 +35,13 @@ class SimpleErrorHandler(ErrorHandler):
     def init(self, server):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        server.app.register_error_handler(NotFound, self.handler_404)
-        server.app.register_error_handler(BadRequest, self.handler_400)
-        server.app.register_error_handler(MethodNotAllowed, self.handler_400)
-        server.app.register_error_handler(ValidationError, self.handler_400)
-        server.app.register_error_handler(Exception, self.handler_500)
+        server.app.register_error_handler(NotFound, self.handle_404)
+        server.app.register_error_handler(BadRequest, self.handle_400)
+        server.app.register_error_handler(MethodNotAllowed, self.handle_400)
+        server.app.register_error_handler(ValidationError, self.handle_400)
+        server.app.register_error_handler(Exception, self.handle_500)
 
-    def handler_404(self, e):
+    def handle_404(self, e):
         self.logger.exception('404 error')
 
         if request.path.startswith(self.api_route):
@@ -49,7 +49,7 @@ class SimpleErrorHandler(ErrorHandler):
         else:
             return render_template(self.template_folder + '404.html')
 
-    def handler_400(self, e):
+    def handle_400(self, e):
         self.logger.exception('400 error')
 
         if request.path.startswith(self.api_route):
@@ -60,7 +60,7 @@ class SimpleErrorHandler(ErrorHandler):
         else:
             return render_template(self.template_folder + '400.html')
 
-    def handler_500(self, e):
+    def handle_500(self, e):
         self.logger.exception('500 error')
 
         if request.path.startswith(self.api_route):
