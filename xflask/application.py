@@ -8,14 +8,15 @@ from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
 from werkzeug.utils import find_modules, import_string
 
-from xflask.common.util import get_root_dir, get_file_path, get_xflask_path
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
+from xflask.common.util import get_root_dir, get_file_path, get_xflask_path
 from xflask.component import Component
 from xflask.controller import Controller
-from xflask.web.security.jwt_auth_manager import JwtAuthManager
-from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.error_handler import SimpleErrorHandler
+from xflask.web.filter import Filter
+from xflask.web.security.jwt_auth_filter import JwtAuthFilter
+from xflask.web.security.jwt_auth_manager import JwtAuthManager
 
 
 class Application(object):
@@ -58,20 +59,16 @@ class Application(object):
 
         self._init_db()
 
-        self._init_auth_manager()
-
     def init(self):
-        for filter_ in self.filters:
-            filter_.init(self)
-
-        if self.error_handler is not None:
-            self.error_handler.init(self)
-
         self._register_components()
 
         self._register_controllers()
 
         self._register_blueprints()
+
+        self._register_filters()
+
+        self._init_auth_manager()
 
     def _init_config(self):
         self.conf = Configuration(get_xflask_path(self.DEF_CONF_FILE))
@@ -114,6 +111,18 @@ class Application(object):
 
         self.auth_manager.init(self)
 
+    def get_component(self, clazz):
+        return self.flask_injector.injector.get(clazz)
+
+    def _register_filters(self):
+        for filter_ in self.filters:
+            if isinstance(filter_, Filter):
+                filter_.init(self)
+                self.app.before_request(filter_.before)
+                self.app.after_request(filter_.after)
+            else:
+                self.logger.debug('!!! Invalid filter: %s', filter_.__name__)
+
     def _register_blueprints(self):
         for package in self.blueprint_pkgs:
             try:
@@ -127,9 +136,9 @@ class Application(object):
 
                     except Exception as e:
                         if not isinstance(e, AttributeError):
-                            self.logger.error('fail to register blueprint: ', e)
+                            self.logger.error('!!! Failed to register blueprint: ', e)
             except Exception as e:
-                self.logger.error('fail to find blueprint module in package: %s', package, e)
+                self.logger.error('!!! Failed to find blueprint module in package: %s', package, e)
 
     def _register_components(self):
 

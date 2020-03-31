@@ -1,4 +1,5 @@
 import logging
+
 from flask import request
 from werkzeug.routing import Map, Rule
 
@@ -23,11 +24,8 @@ class ApiLoggingFilter(Filter):
 
         self.excludes_matcher = Map(rules).bind('', '/')
 
-    def init(self, server):
+    def init(self, application):
         self._logger = logging.getLogger(self.__class__.__name__)
-
-        server.app.before_request(self.before)
-        server.app.after_request(self.after)
 
     def before(self):
         if self.routes is None or len(self.routes) == 0:
@@ -53,5 +51,3 @@ class ApiLoggingFilter(Filter):
             self._logger.debug(response.get_json())
 
         return response
-
-

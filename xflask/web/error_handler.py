@@ -11,7 +11,7 @@ from xflask.web.response import Response
 
 class ErrorHandler(object):
 
-    def init(self, server):
+    def init(self, application):
         pass
 
     def handle_404(self, e):
@@ -32,14 +32,14 @@ class SimpleErrorHandler(ErrorHandler):
         self.api_route = api_route
         self.template_folder = template_folder
 
-    def init(self, server):
+    def init(self, application):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        server.app.register_error_handler(NotFound, self.handle_404)
-        server.app.register_error_handler(BadRequest, self.handle_400)
-        server.app.register_error_handler(MethodNotAllowed, self.handle_400)
-        server.app.register_error_handler(ValidationError, self.handle_400)
-        server.app.register_error_handler(Exception, self.handle_500)
+        application.app.register_error_handler(NotFound, self.handle_404)
+        application.app.register_error_handler(BadRequest, self.handle_400)
+        application.app.register_error_handler(MethodNotAllowed, self.handle_400)
+        application.app.register_error_handler(ValidationError, self.handle_400)
+        application.app.register_error_handler(Exception, self.handle_500)
 
     def handle_404(self, e):
         self.logger.exception('404 error')
