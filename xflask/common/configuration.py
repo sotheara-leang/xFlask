@@ -1,35 +1,13 @@
-import os
-import re
-
 import yaml
+from yaml import Loader
+
+from xflask.common.util import load_config, get_file_path, merge_dict
 
 
 class Configuration:
 
     def __init__(self, conf_file):
-        with open(conf_file, 'r') as file:
-            param_matcher = re.compile(r'.*\$\{([^}^{]+)\}.*')
-
-            def param_constructor(loader, node):
-                value = node.value
-
-                params = param_matcher.findall(value)
-                for param in params:
-                    try:
-                        param_value = os.environ[param]
-                        return value.replace('${' + param + '}', param_value)
-                    except Exception:
-                        pass
-
-                return value
-
-            class VariableLoader(yaml.SafeLoader):
-                pass
-
-            VariableLoader.add_implicit_resolver('!param', param_matcher, None)
-            VariableLoader.add_constructor('!param', param_constructor)
-
-            self.cfg = yaml.load(file, Loader=VariableLoader)
+        self.cfg = load_config(conf_file)
 
     def exist(self, key):
         return True if self.get(key) is not None else False
@@ -62,3 +40,9 @@ class Configuration:
 
     def dump(self):
         return yaml.dump(self.cfg, Dumper=yaml.Dumper)
+
+    def merge(self, conf_file):
+        with open(get_file_path(conf_file), 'r') as file:
+            cfg = yaml.load(file, Loader=Loader)
+
+            merge_dict(self.cfg, cfg)

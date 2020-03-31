@@ -20,7 +20,7 @@ from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
 
 from xflask.classy.annotation import *
-from xflask.common.obj_util import serialize
+from xflask.common.util.obj_util import serialize
 from xflask.component import Component
 from xflask.marshmallow import ValidationError
 from xflask.web.vo import Vo

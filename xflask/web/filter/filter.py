@@ -1,6 +1,6 @@
 class Filter(object):
 
-    def init(self, server):
+    def init(self, application):
         pass
 
     def before(self):

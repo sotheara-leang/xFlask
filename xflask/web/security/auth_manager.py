@@ -1,6 +1,6 @@
 class AuthManager(object):
 
-    def init(self, server):
+    def init(self, application):
         pass
 
     def get_current_user(self):

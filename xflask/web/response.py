@@ -1,4 +1,4 @@
-from xflask.common import to_dict
+from xflask.common.util import to_dict
 from xflask.type import Enum
 from xflask.type.sys_code import SysCode
 

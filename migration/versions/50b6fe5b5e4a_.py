@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 2ef3042428bd
+Revision ID: 50b6fe5b5e4a
 Revises: 
-Create Date: 2020-02-27 14:54:57.092789
+Create Date: 2020-03-25 09:57:28.210402
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ from main.migration_types import *
 
 
 # revision identifiers, used by Alembic.
-revision = '2ef3042428bd'
+revision = '50b6fe5b5e4a'
 down_revision = None
 branch_labels = None
 depends_on = None

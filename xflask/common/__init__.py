@@ -1,7 +1,5 @@
+import sys
 from flask import current_app
-
-from xflask.common.file_util import *
-from xflask.common.obj_util import *
 
 
 def get_xflask():

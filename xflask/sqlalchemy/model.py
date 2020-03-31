@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql import func
 
-from xflask.common.date_util import to_date_str
+from xflask.common.util.date_util import to_date_str
 from xflask.sqlalchemy import db
 from xflask.type.enum import Enum
 from xflask.web.security import get_current_user

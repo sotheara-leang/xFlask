@@ -1,0 +1,23 @@
+### FLASK ###
+APP_NAME: xflask-server
+
+HOST: localhost
+PORT: 8000
+
+DEBUG: true
+ENV: development
+
+SECRET_KEY: AAAAAA
+
+STATIC_DIR: main/web/resource
+
+TEMPLATE_DIR: main/web/view
+
+LOGGING: true
+LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml
+
+### JWT ###
+JWT_SECRET_KEY: BBBBBB
+
+### SQLALCHEMY ###
+SQLALCHEMY_TRACK_MODIFICATIONS: false

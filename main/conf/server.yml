@@ -1,19 +1,11 @@
-APP_NAME: flask-server
+### FLASK ###
+HOST: localhost
+PORT: 8000
 
 DEBUG: true
 ENV: development
 
-SECRET_KEY: AAAAAA
-
-JWT_SECRET_KEY: BBBBBB
-
-SQLALCHEMY_TRACK_MODIFICATIONS: false
-SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost/xflask
-
-HOST: localhost
-PORT: 8000
-
-STATIC_DIR: main/web/resource
-TEMPLATE_DIR: main/web/view
-
 LOGGING: true
+
+### SQLALCHEMY ###
+SQLALCHEMY_DATABASE_URI: postgresql://postgres:postgres@localhost/xflask
