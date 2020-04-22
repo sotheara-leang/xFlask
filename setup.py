@@ -22,7 +22,8 @@ def requirement():
 setup(
     name='xFlask',
     packages=find_packages(),
-    version='0.1.0',
+    package_data={'xflask': ['conf/*']},
+    version='0.1.2',
     description='Python Web Framework',
     long_description=readme(),
     long_description_content_type='text/markdown',

@@ -248,6 +248,9 @@ class FlaskView(object):
 
                         if arg_obj.required is True and not arg_value or not arg_value.get(field):
                             raise ValidationError("Field %s is missing" % field)
+
+                        arg_value = arg_value.get(field)
+
                 # Form
                 elif isinstance(arg_obj, FormBody):
                     form_data = CombinedMultiDict((request.files, request.form)).to_dict()
@@ -267,6 +270,8 @@ class FlaskView(object):
 
                     if arg_obj.required is True and not form_data or not form_data.get(field):
                         raise ValidationError("Field %s is missing" % field)
+
+                    arg_value = arg_value.get(field)
 
                 elif inspect.isclass(arg_obj) and issubclass(arg_obj, Component):
                     arg_value = injector.get(arg_obj)
