@@ -8,20 +8,21 @@ class Dao(Component):
     def __init__(self, model):
         self.model = model
 
-    def exist(self, id):
-        return self.query().filter_by(id=id).scalar() is not None
+    def exist(self, id, **criterion):
+        filter_ =  self.query().filter_by(id=id) if id is not None else self.query().filter_by(**criterion)
+        return filter_.scalar() is not None
 
-    def get(self, id):
-        return self.query().get(id)
+    def get(self, id=None, **criterion):
+        return self.query().get(id) if id is not None else self.query().filter_by(**criterion).first()
 
-    def get_all(self):
-        return self.query().all()
+    def get_all(self, **criterion):
+        return self.query().filter_by(**criterion).all()
 
-    def query(self, **models):
+    def query(self, *models):
         if models is None or len(models) == 0:
             return db.session.query(self.model)
         else:
-            return db.session.query(**models)
+            return db.session.query(*models)
 
     @transactional()
     def insert(self, obj):
