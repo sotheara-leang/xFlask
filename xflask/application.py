@@ -60,6 +60,8 @@ class Application(object):
         self._init_db()
 
     def init(self):
+        self._init_error_handler()
+
         self._register_components()
 
         self._register_controllers()
@@ -111,8 +113,8 @@ class Application(object):
 
         self.auth_manager.init(self)
 
-    def get_component(self, clazz):
-        return self.flask_injector.injector.get(clazz)
+    def _init_error_handler(self):
+        self.error_handler.init(self)
 
     def _register_filters(self):
         for filter_ in self.filters:
@@ -139,6 +141,9 @@ class Application(object):
                             self.logger.error('!!! Failed to register blueprint: ', e)
             except Exception as e:
                 self.logger.error('!!! Failed to find blueprint module in package: %s', package, e)
+
+    def get_component(self, clazz):
+        return self.flask_injector.injector.get(clazz)
 
     def _register_components(self):
 
