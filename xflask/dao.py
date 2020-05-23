@@ -1,12 +1,11 @@
 from xflask.component import Component
-from xflask.sqlalchemy import db, transactional
+from xflask.sqlalchemy import session, transactional
 
 
 class Dao(Component):
 
     def __init__(self, model):
         self.model = model
-        self.db.session = db.session
 
     def exist(self, id=None, **criterion):
         query =  self.query().filter_by(**self._get_pk_criterion(id)) \
@@ -22,16 +21,16 @@ class Dao(Component):
 
     def query(self, *models):
         if models is None or len(models) == 0:
-            return db.session.query(self.model)
+            return session.query(self.model)
         else:
-            return db.session.query(*models)
+            return session.query(*models)
 
     @transactional()
     def insert(self, obj):
         if isinstance(obj, dict):
             obj = self.model(**obj)
 
-        db.session.add(obj)
+        session.add(obj)
 
     @transactional()
     def update(self, obj, **criterion):
@@ -48,25 +47,28 @@ class Dao(Component):
             if isinstance(obj, (int, float)) or isinstance(obj, tuple):
                 self.query().filter_by(**self._get_pk_criterion(obj)).delete()
             else:
-                db.session.delete(obj)
+                session.delete(obj)
+
+    def delete_all(self):
+        self.query().delete()
     
     def _begin(self, subtransactions=True, nested=False):
-        db.session.begin(subtransactions=subtransactions, nested=nested)
+        session.begin(subtransactions=subtransactions, nested=nested)
 
     def _begin_nested(self):
-        db.session.begin_nested()
+        session.begin_nested()
 
     def _flush(self, objs):
-        db.session.flush(objs)
+        session.flush(objs)
 
     def _merge(self, obj):
-        return db.session.merge(obj)
+        return session.merge(obj)
 
     def _commit(self):
-        db.session.commit()
+        session.commit()
 
     def _rollback(self):
-        db.session.rollback()
+        session.rollback()
         
     def _get_pk_criterion(self, id):
         if isinstance(id, (int, float)):

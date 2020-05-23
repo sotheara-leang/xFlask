@@ -63,6 +63,9 @@ class TestUserDao(TestCase):
     def test_delete_by_criterion(self):
         self.user_dao.delete(username='user2')
 
+    def test_delete_all(self):
+        self.user_dao.delete_all()
+
     def test_merge(self):
         user = {'id': 51, 'username': 'user2', 'email': 'user2@gmail.com'}
 

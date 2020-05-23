@@ -39,6 +39,9 @@ class CrudService(Service):
     def delete(self, obj=None, **criterion):
         self.dao.delete(obj, **criterion)
 
+    def delete_all(self):
+        self.dao.delete_all()
+
     def _begin(self, subtransactions=True, nested=False):
         self.dao.begin(subtransactions=subtransactions, nested=nested)
 
