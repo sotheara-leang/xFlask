@@ -7,7 +7,7 @@ class TestServiceUser(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.user_service = self.injector.get(UserService)
+        self.user_service = application.get_component(UserService)
 
     def test_get(self):
         user = self.user_service.get(43)

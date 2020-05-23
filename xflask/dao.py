@@ -1,4 +1,3 @@
-from xflask.common.util.obj_util import to_dict
 from xflask.component import Component
 from xflask.sqlalchemy import db, transactional
 
@@ -7,13 +6,16 @@ class Dao(Component):
 
     def __init__(self, model):
         self.model = model
+        self.db.session = db.session
 
-    def exist(self, id, **criterion):
-        filter_ =  self.query().filter_by(id=id) if id is not None else self.query().filter_by(**criterion)
-        return filter_.scalar() is not None
+    def exist(self, id=None, **criterion):
+        query =  self.query().filter_by(**self._get_pk_criterion(id)) \
+            if id is not None else self.query().filter_by(**criterion)
+        return query.scalar() is not None
 
     def get(self, id=None, **criterion):
-        return self.query().get(id) if id is not None else self.query().filter_by(**criterion).first()
+        return self.query().filter_by(**self._get_pk_criterion(id)).first() \
+            if id is not None else self.query().filter_by(**criterion).first()
 
     def get_all(self, **criterion):
         return self.query().filter_by(**criterion).all()
@@ -32,33 +34,46 @@ class Dao(Component):
         db.session.add(obj)
 
     @transactional()
-    def update(self, obj):
-        if isinstance(obj, dict):
-            self.query().filter_by(id=obj['id']).update(obj)
-        else:
-            self.query().filter_by(id=obj.id).update(to_dict(obj))
+    def update(self, obj, **criterion):
+        if len(criterion) > 0:
+            self.query().filter_by(**criterion).update(obj if isinstance(obj, dict) else obj.to_dict())
+        elif isinstance(obj, dict):
+            self.query().filter_by(**self._get_pk_criterion(obj)).update(obj)
 
     @transactional()
-    def delete(self, obj):
-        if isinstance(obj, (int, float)):
-            self.query().filter_by(id=obj).delete()
-        else:
-            db.session.delete(obj)
-
-    def begin(self, subtransactions=True, nested=False):
+    def delete(self, obj=None, **criterion):
+        if len(criterion) > 0:
+            self.query().filter_by(**criterion).delete()
+        elif obj is not None:
+            if isinstance(obj, (int, float)) or isinstance(obj, tuple):
+                self.query().filter_by(**self._get_pk_criterion(obj)).delete()
+            else:
+                db.session.delete(obj)
+    
+    def _begin(self, subtransactions=True, nested=False):
         db.session.begin(subtransactions=subtransactions, nested=nested)
 
-    def begin_nested(self):
+    def _begin_nested(self):
         db.session.begin_nested()
 
-    def flush(self, objs):
+    def _flush(self, objs):
         db.session.flush(objs)
 
-    def merge(self, obj):
+    def _merge(self, obj):
         return db.session.merge(obj)
 
-    def commit(self):
+    def _commit(self):
         db.session.commit()
 
-    def rollback(self):
+    def _rollback(self):
         db.session.rollback()
+        
+    def _get_pk_criterion(self, id):
+        if isinstance(id, (int, float)):
+            id = (id,)
+
+        criterion = {}
+        for idx, pk in enumerate(self.model.__mapper__.primary_key):
+            criterion[pk.name] = id[idx]
+
+        return criterion

@@ -6,4 +6,4 @@ from xflask.web.filter.api_logging_filter import ApiLoggingFilter
 
 setup_env('xFlask')
 
-server = Application(db, conf_file='test/conf/server.yml', filters=[ApiLoggingFilter()])
+application = Application(db, conf_file='test/conf/server.yml', filters=[ApiLoggingFilter()])

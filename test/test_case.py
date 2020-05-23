@@ -6,12 +6,10 @@ from test import *
 class TestCase(TestCase):
 
     def create_app(self):
-        return server.app
+        return application.app
 
     def setUp(self):
-        server.init()
-        self.injector = server.flask_injector.injector
-        self.client = server.app.test_client()
+        application.init()
 
         #db.create_all()
 

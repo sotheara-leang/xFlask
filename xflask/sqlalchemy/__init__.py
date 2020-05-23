@@ -14,10 +14,11 @@ def transactional(subtransactions=True, nested=False):
             db.session.begin(subtransactions=subtransactions, nested=nested)
             try:
                 result = f(*args, **kwargs)
+                db.session.commit()
             except Exception as e:
                 db.session.rollback()
                 raise e
-            db.session.commit()
+
             return result
 
         return wrapper
