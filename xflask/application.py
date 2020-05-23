@@ -12,7 +12,7 @@ from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
 from xflask.common.util import get_root_dir, get_file_path, get_xflask_path
 from xflask.component import Component
-from xflask.controller import Controller
+from xflask.web.controller import Controller
 from xflask.web.error_handler import SimpleErrorHandler
 from xflask.web.filter import Filter
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter

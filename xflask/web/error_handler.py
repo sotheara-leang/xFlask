@@ -1,4 +1,5 @@
 import logging
+
 from flask import render_template
 from flask import request
 from marshmallow.exceptions import ValidationError
@@ -6,7 +7,7 @@ from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
 
 from xflask.exception import Exception as Sys_Exception
 from xflask.type.sys_code import SysCode
-from xflask.web.response import Response
+from xflask.web.rest.response import Response
 
 
 class ErrorHandler(object):
@@ -68,4 +69,3 @@ class SimpleErrorHandler(ErrorHandler):
             return Response.fail(code).to_dict()
         else:
             return render_template(self.template_folder + '500.html')
-

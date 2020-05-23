@@ -1,11 +1,10 @@
 from injector import inject
 
-from xflask.web.response import Response
-from xflask.classy import route, JsonBody
-from xflask.controller import Controller
-
-from main.service.user import UserService
 from main.controller.vo.auth import LoginVo
+from main.service.user import UserService
+from xflask.web import route, JsonBody
+from xflask.web.controller import Controller
+from xflask.web.rest.response import Response
 
 
 class AuthController(Controller):
@@ -19,4 +18,3 @@ class AuthController(Controller):
         token = self.user_service.auth(login_vo.username, login_vo.password)
 
         return Response.success({'token': token})
-

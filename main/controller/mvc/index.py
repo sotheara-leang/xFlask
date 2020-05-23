@@ -1,6 +1,6 @@
 from xflask import render_template
-from xflask.classy import route
-from xflask.controller import Controller
+from xflask.web import route
+from xflask.web.controller import Controller
 
 
 class IndexController(Controller):
@@ -8,5 +8,3 @@ class IndexController(Controller):
     @route('/')
     def index(self):
         return render_template('index.html')
-
-

@@ -1,3 +1,0 @@
-class Dto(object):
-    ...
-

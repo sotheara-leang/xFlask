@@ -23,7 +23,7 @@ from xflask.classy.annotation import *
 from xflask.common.util.obj_util import serialize
 from xflask.component import Component
 from xflask.marshmallow import ValidationError
-from xflask.web.vo import Vo
+from xflask.marshmallow.schema import Schema
 
 _py2 = sys.version_info[0] == 2
 
@@ -237,7 +237,7 @@ class FlaskView(object):
                         if body_type is None:
                             arg_value = request.get_json()
                         else:
-                            if issubclass(body_type, Vo):
+                            if issubclass(body_type, Schema):
                                 arg_value = body_type.deserialize(request.get_json(), arg_obj.exclude)
                             else:
                                 arg_value = body_type(**request.get_json())
@@ -259,7 +259,7 @@ class FlaskView(object):
                     if body_type is None:
                         arg_value = form_data
                     else:
-                        if issubclass(body_type, Vo):
+                        if issubclass(body_type, Schema):
                             arg_value = body_type.deserialize(form_data, arg_obj.exclude)
                         else:
                             arg_value = body_type(**form_data)

@@ -1,7 +1,8 @@
-from marshmallow import Schema, EXCLUDE
+import marshmallow.schema
+from marshmallow import EXCLUDE
 
 
-class Vo(object):
+class Schema(object):
 
     def __init__(self, *args, **kwargs):
         if not hasattr(self.__class__, '__annotations__'):
@@ -30,9 +31,9 @@ class Vo(object):
             annotations_map[name] = annotation
 
         if len(exclude) > 0:
-            return Schema.from_dict(annotations_map)(unknown=EXCLUDE)
+            return marshmallow.Schema.from_dict(annotations_map)(unknown=EXCLUDE)
         else:
-            return Schema.from_dict(annotations_map)()
+            return marshmallow.Schema.from_dict(annotations_map)()
 
     @classmethod
     def validate(cls, obj: dict, exclude=[]):
@@ -61,4 +62,3 @@ class Vo(object):
     def deserialize_as_dict(cls, obj: dict, exclude=[]):
         schema = cls._get_schema(exclude)
         return schema.load(obj)
-

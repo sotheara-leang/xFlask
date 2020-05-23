@@ -1,16 +1,14 @@
 from injector import inject
 
-from xflask.classy import route, JsonBody
-from xflask.controller import Controller
-from xflask.web.response import Response
-
-from main.service.user import UserService
 from main.controller.vo.user import UserVo
 from main.model.user import User
+from main.service.user import UserService
+from xflask.web import route, JsonBody
+from xflask.web.controller import Controller
+from xflask.web.rest.response import Response
 
 
 class UserController(Controller):
-
     route_base = '/api/user/'
 
     @inject
