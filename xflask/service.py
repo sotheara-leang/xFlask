@@ -30,7 +30,7 @@ class CrudService(Service):
     def query(self, *models):
         return self.dao.query(*models)
 
-    def insert(self, obj):
+    def create(self, obj):
         self.dao.insert(obj)
 
     def update(self, obj, **criterion):
