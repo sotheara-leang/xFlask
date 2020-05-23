@@ -9,9 +9,9 @@ ENV: development
 
 SECRET_KEY: AAAAAA
 
-STATIC_DIR: main/web/resource
+STATIC_DIR: webapp/public
 
-TEMPLATE_DIR: main/web/view
+TEMPLATE_DIR: webapp/view
 
 LOGGING: true
 LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml
