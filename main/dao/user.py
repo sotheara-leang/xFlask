@@ -9,5 +9,5 @@ class UserDao(Dao):
         super(UserDao, self).__init__(User)
 
     def get_by_username(self, username):
-        return self.query().filter_by(username=username).first()
+        return self.get(username=username)
 

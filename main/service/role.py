@@ -10,4 +10,3 @@ class RoleService(CrudService):
     @inject
     def __init__(self, dao: RoleDao):
         super(RoleService, self).__init__(dao)
-
