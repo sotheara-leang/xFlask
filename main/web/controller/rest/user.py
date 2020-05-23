@@ -1,6 +1,6 @@
 from injector import inject
 
-from main.controller.vo.user import UserVo
+from main.web.vo.user import UserVo
 from main.model.user import User
 from main.service.user import UserService
 from xflask.web import route, JsonBody

@@ -1,6 +1,6 @@
 from test.test_case import *
 
-from main.controller.vo.user import UserVo
+from main.web.vo.user import UserVo
 from main.type.edu_level import EducationLevel
 
 

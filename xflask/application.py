@@ -22,22 +22,15 @@ from xflask.web.security.jwt_auth_manager import JwtAuthManager
 class Application(object):
     DEF_CONF_FILE           = 'conf/server.yml'
     DEF_LOG_FILE            = 'conf/logging.yml'
-    DEF_BLUEPRINT_PKGS      = []
-    DEF_CONTROLLER_PKGS     = ['main.controller.mvc', 'main.controller.rest']
-    DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
+
     DEF_FILTERS             = [JwtAuthFilter()]
     DEF_ERROR_HANDLER       = SimpleErrorHandler()
     DEF_AUTH_MANAGER        = JwtAuthManager()
 
-    def __init__(self, db, conf_file=None,
-                 component_pkgs=DEF_COMPONENT_PKGS, controller_pkgs=DEF_CONTROLLER_PKGS, blueprint_pkgs=DEF_BLUEPRINT_PKGS,
-                 filters=DEF_FILTERS, error_handler=DEF_ERROR_HANDLER, auth_manager=DEF_AUTH_MANAGER):
+    def __init__(self, db, conf_file=None, filters=DEF_FILTERS, error_handler=DEF_ERROR_HANDLER, auth_manager=DEF_AUTH_MANAGER):
 
         self.db                 = db
         self.conf_file          = conf_file or get_file_path('main/conf/server.yml')
-        self.component_pkgs     = component_pkgs
-        self.blueprint_pkgs     = blueprint_pkgs
-        self.controller_pkgs    = controller_pkgs
 
         self.filters            = filters or []
         self.error_handler      = error_handler
@@ -126,7 +119,7 @@ class Application(object):
                 self.logger.debug('!!! Invalid filter: %s', filter_.__name__)
 
     def _register_blueprints(self):
-        for package in self.blueprint_pkgs:
+        for package in self.conf.get('BLUEPRINT_PKG'):
             try:
                 for name in find_modules(package):
                     try:
@@ -156,7 +149,7 @@ class Application(object):
                 binder.bind(SQLAlchemy, to=self.db, scope=singleton)
 
             # component
-            for package in self.component_pkgs:
+            for package in self.conf.get('COMPONENT_PKG'):
                 try:
                     self.logger.debug('>>> Scan modules in %s', package)
 
@@ -187,7 +180,7 @@ class Application(object):
                                 del module
 
                         except Exception as e:
-                            self.logger.exception('!!! Failed to initialize component in %s', pkg_name)
+                            self.logger.exception('!!! Failed to initialize component in %s', pkg_name, e)
                             sys.exit()
 
                 except Exception:
@@ -196,7 +189,7 @@ class Application(object):
         self.flask_injector = FlaskInjector(app=self.app, modules=[configure])
 
     def _register_controllers(self):
-        for package in self.controller_pkgs:
+        for package in self.conf.get('CONTROLLER_PKG'):
             try:
                 self.logger.debug('>>> Scan modules in %s', package)
 
@@ -228,8 +221,8 @@ class Application(object):
                         if not valid_module:
                             del module
 
-                    except Exception:
-                        self.logger.exception('!!! Failed to initialize controller in %s', module_ns)
+                    except Exception as e:
+                        self.logger.exception('!!! Failed to initialize controller in %s', module_ns, e)
                         sys.exit()
 
             except Exception:
