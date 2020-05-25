@@ -1,5 +1,6 @@
 import marshmallow.schema
-from marshmallow import EXCLUDE
+
+from marshmallow import EXCLUDE, ValidationError
 
 
 class Schema(object):
@@ -17,7 +18,7 @@ class Schema(object):
                 value = kwargs.get(name)
                 self.__dict__[name] = value
 
-    @classmethod
+    @staticmethod
     def _get_schema(cls, exclude=[]):
         if not hasattr(cls, '__annotations__'):
             raise Exception(cls.__name__ + ' has no annotations')
@@ -38,7 +39,13 @@ class Schema(object):
     @classmethod
     def validate(cls, obj: dict, exclude=[]):
         schema = cls._get_schema(exclude)
-        return schema.validate(obj)
+        result = schema.validate(obj)
+        try:
+            cls.custom_validate(obj, exclude)
+        except ValidationError:
+            result = False
+
+        return result
 
     @classmethod
     def serialize(cls, obj, exclude=[]):
@@ -52,13 +59,28 @@ class Schema(object):
     @classmethod
     def deserialize(cls, obj: dict, exclude=[]):
         schema = cls._get_schema(exclude)
-        return cls(**schema.load(obj))
-
-    def deserialize_(self, obj: dict, exclude=[]):
-        schema = self.__class__._get_schema(exclude)
-        return self.__class__(**schema.load(obj))
+        data = cls._load(schema, obj, exclude)
+        return cls(**data)
 
     @classmethod
     def deserialize_as_dict(cls, obj: dict, exclude=[]):
         schema = cls._get_schema(exclude)
-        return schema.load(obj)
+        return cls._load(schema, obj, exclude)
+
+    def deserialize_(self, obj: dict, exclude=[]):
+        schema = self.__class__._get_schema(exclude)
+        data = self._load(schema, obj, exclude)
+        return self.__class__(**data)
+
+    @classmethod
+    def _load(cls, schema, obj, exclude):
+        data = schema.load(obj)
+
+        # perform custom validation
+        cls.custom_validate(obj, exclude)
+
+        return data
+
+    @staticmethod
+    def custom_validate(data, exclude):
+        pass

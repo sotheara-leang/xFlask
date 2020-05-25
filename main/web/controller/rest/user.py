@@ -30,7 +30,7 @@ class UserController(Controller):
 
     @route('', methods=['POST'])
     def create(self, user: JsonBody(UserVo, exclude=['id'])):
-        self.user_service.create(User(**user.__dict__))
+        self.user_service.create(User(**user))
 
         return Response.success()
 
