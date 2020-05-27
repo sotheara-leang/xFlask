@@ -20,10 +20,10 @@ from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
 
 from xflask.classy.annotation import *
-from xflask.common.util.obj_util import serialize
 from xflask.component import Component
 from xflask.marshmallow import ValidationError
 from xflask.marshmallow.schema import Schema
+from xflask.common.util.obj_util import to_dict
 
 _py2 = sys.version_info[0] == 2
 
@@ -290,7 +290,7 @@ class FlaskView(object):
 
             if not isinstance(response, dict) and not isinstance(response, str) \
                     and not isinstance(response, tuple) and not isinstance(response, Response):
-                response = serialize(response)
+                response = to_dict(response)
 
             if not isinstance(response, Response):
                 response = make_response(response)
@@ -411,4 +411,3 @@ def get_true_argspec(method):
 
 class DecoratorCompatibilityError(Exception):
     pass
-

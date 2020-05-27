@@ -5,9 +5,10 @@ from flask import request
 from marshmallow.exceptions import ValidationError
 from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
 
+from xflask.common.util import to_dict
 from xflask.exception import Exception as Sys_Exception
 from xflask.type.sys_code import SysCode
-from xflask.web.rest.response import Response
+from xflask.web.response import Response
 
 
 class ErrorHandler(object):
@@ -46,7 +47,7 @@ class SimpleErrorHandler(ErrorHandler):
         self.logger.exception('404 error')
 
         if request.path.startswith(self.api_route):
-            return Response.fail(SysCode.NOT_FOUND).to_dict()
+            return to_dict(Response.fail(SysCode.NOT_FOUND))
         else:
             return render_template(self.template_folder + '404.html')
 
@@ -55,7 +56,7 @@ class SimpleErrorHandler(ErrorHandler):
 
         if request.path.startswith(self.api_route):
             if isinstance(e, ValidationError):
-                return Response.fail(SysCode.INVALID, e.messages).to_dict()
+                return to_dict(Response.fail(SysCode.INVALID, e.messages))
             else:
                 return Response.fail(SysCode.INVALID).to_dict()
         else:
@@ -66,6 +67,6 @@ class SimpleErrorHandler(ErrorHandler):
 
         if request.path.startswith(self.api_route):
             code = e.code if isinstance(e, Sys_Exception) else SysCode.SYS_ERROR
-            return Response.fail(code).to_dict()
+            return to_dict(Response.fail(code))
         else:
             return render_template(self.template_folder + '500.html')

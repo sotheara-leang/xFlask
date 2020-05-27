@@ -7,12 +7,12 @@ def readme():
 def requirement():
     return [
         'Flask',
+        'Flask-Script',
         'Flask-Migrate',
         'Flask-SQLAlchemy',
         'Flask-Testing',
         'Flask-Injector',
         'Flask-JWT-Extended',
-        'Flask-Script',
         'Werkzeug==0.16.1',
         'marshmallow',
         'psycopg2-binary',

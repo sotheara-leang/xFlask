@@ -3,6 +3,7 @@ import logging
 import sys
 
 from flask import Flask
+from flask.json import JSONEncoder
 from flask_injector import FlaskInjector, request
 from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
@@ -17,24 +18,28 @@ from xflask.web.error_handler import SimpleErrorHandler
 from xflask.web.filter import Filter
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.security.jwt_auth_manager import JwtAuthManager
+from xflask.web.serializer import EnumSerializer, DateTimeSerializer, ModelSerializer
 
 
 class Application(object):
-    DEF_CONF_FILE           = 'conf/server.yml'
-    DEF_LOG_FILE            = 'conf/logging.yml'
+    DEF_CONF_FILE = 'conf/server.yml'
+    DEF_LOG_FILE = 'conf/logging.yml'
 
-    DEF_FILTERS             = [JwtAuthFilter()]
-    DEF_ERROR_HANDLER       = SimpleErrorHandler()
-    DEF_AUTH_MANAGER        = JwtAuthManager()
+    DEF_FILTERS = [JwtAuthFilter()]
+    DEF_ERROR_HANDLER = SimpleErrorHandler()
+    DEF_AUTH_MANAGER = JwtAuthManager()
 
-    def __init__(self, db, conf_file=None, filters=DEF_FILTERS, error_handler=DEF_ERROR_HANDLER, auth_manager=DEF_AUTH_MANAGER):
+    DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer()]
 
-        self.db                 = db
-        self.conf_file          = conf_file or get_file_path('main/conf/server.yml')
+    def __init__(self, db, conf_file=None, filters=None, error_handler=None, auth_manager=None, json_serializers=[]):
 
-        self.filters            = filters or []
-        self.error_handler      = error_handler
-        self.auth_manager       = auth_manager
+        self.db = db
+        self.conf_file = conf_file or get_file_path('main/conf/server.yml')
+
+        self.filters = filters or self.DEF_AUTH_MANAGER
+        self.error_handler = error_handler or self.DEF_ERROR_HANDLER
+        self.auth_manager = auth_manager or self.DEF_AUTH_MANAGER
+        self.json_serializers = json_serializers + self.DEF_JSON_SERIALIZERS
 
         self._pre_init()
 
@@ -51,6 +56,12 @@ class Application(object):
         self._init_app()
 
         self._init_db()
+
+        # register xflask extension
+        if not hasattr(self.app, 'extensions'):
+            self.app.extensions = {}
+
+        self.app.extensions['xflask'] = self
 
     def init(self):
         self._init_error_handler()
@@ -84,17 +95,26 @@ class Application(object):
 
     def _init_app(self):
         self.app = Flask(self.conf.get('APP_NAME'),
-                    static_folder=self.conf.get('STATIC_DIR'),
-                    template_folder=self.conf.get('TEMPLATE_DIR'),
-                    root_path=get_root_dir())
+                         static_folder=self.conf.get('STATIC_DIR'),
+                         template_folder=self.conf.get('TEMPLATE_DIR'),
+                         root_path=get_root_dir())
 
+        # config
         self.app.config.from_mapping(self.conf.cfg)
 
-        #
-        if not hasattr(self.app, 'extensions'):
-            self.app.extensions = {}
+        # json encoder
+        json_serializers = self.json_serializers
 
-        self.app.extensions['xflask'] = self
+        class _JsonEncoder(JSONEncoder):
+
+            def default(self, obj):
+                for serializer in json_serializers:
+                    if serializer.check(obj):
+                        return serializer.serialize(obj)
+
+                return super().default(obj)
+
+        self.app.json_encoder = _JsonEncoder
 
     def _init_db(self):
         if self.conf.exist('SQLALCHEMY_DATABASE_URI'):
@@ -156,7 +176,8 @@ class Application(object):
                     for pkg_name in find_modules(package):
                         try:
                             module = import_string(pkg_name)
-                            class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == module.__name__]
+                            class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
+                                           m[1].__module__ == module.__name__]
 
                             valid_module = False
                             for class_name in class_names:
@@ -196,7 +217,8 @@ class Application(object):
                 for module_ns in find_modules(package):
                     try:
                         module = import_string(module_ns)
-                        class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == module.__name__]
+                        class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
+                                       m[1].__module__ == module.__name__]
 
                         valid_module = False
                         for class_name in class_names:

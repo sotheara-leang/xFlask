@@ -5,7 +5,7 @@ from main.model.user import User
 from main.service.user import UserService
 from xflask.web import route, JsonBody
 from xflask.web.controller import Controller
-from xflask.web.rest.response import Response
+from xflask.web.response import Response
 
 
 class UserController(Controller):
