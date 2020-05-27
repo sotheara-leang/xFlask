@@ -1,9 +1,9 @@
 from injector import inject
 
-from main.web.vo.user import UserVo
+from main.web.form.user import *
 from main.model.user import User
 from main.service.user import UserService
-from xflask.web import route, JsonBody
+from xflask.web import route
 from xflask.web.controller import Controller
 from xflask.web.response import Response
 
@@ -29,14 +29,14 @@ class UserController(Controller):
         return Response.success(user)
 
     @route('', methods=['POST'])
-    def create(self, user: JsonBody(UserVo, exclude=['id'])):
-        self.user_service.create(User(**user))
+    def create(self, user_form: CreateUserForm):
+        self.user_service.create(User(**user_form.data))
 
         return Response.success()
 
     @route('', methods=['PUT'])
-    def update(self, user: JsonBody(UserVo)):
-        self.user_service.update(User(**user))
+    def update(self, user_form: UpdateUserForm):
+        self.user_service.update(User(**user_form.data))
 
         return Response.success()
 

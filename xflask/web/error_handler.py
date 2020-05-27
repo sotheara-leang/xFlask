@@ -40,7 +40,6 @@ class SimpleErrorHandler(ErrorHandler):
         application.app.register_error_handler(NotFound, self.handle_404)
         application.app.register_error_handler(BadRequest, self.handle_400)
         application.app.register_error_handler(MethodNotAllowed, self.handle_400)
-        application.app.register_error_handler(ValidationError, self.handle_400)
         application.app.register_error_handler(Exception, self.handle_500)
 
     def handle_404(self, e):
@@ -66,7 +65,15 @@ class SimpleErrorHandler(ErrorHandler):
         self.logger.exception('500 error')
 
         if request.path.startswith(self.api_route):
-            code = e.code if isinstance(e, Sys_Exception) else SysCode.SYS_ERROR
-            return to_dict(Response.fail(code))
+            if isinstance(e, Sys_Exception):
+                response = Response.fail(e.code, e.data)
+            else:
+                response = Response.fail(SysCode.SYS_ERROR)
+
+            return to_dict(response)
         else:
-            return render_template(self.template_folder + '500.html')
+            data = None
+            if isinstance(e, Sys_Exception):
+                data = e.data
+
+            return render_template(self.template_folder + '500.html', errors=data)

@@ -1,8 +1,8 @@
 from injector import inject
 
-from main.web.vo.auth import LoginVo
 from main.service.user import UserService
-from xflask.web import route, JsonBody
+from main.web.form.auth import LoginForm
+from xflask.web import route
 from xflask.web.controller import Controller
 from xflask.web.response import Response
 
@@ -14,7 +14,7 @@ class AuthController(Controller):
         self.user_service = user_service
 
     @route('/api/login', methods=['POST'])
-    def login(self, login_vo: JsonBody(LoginVo)):
-        token = self.user_service.auth(login_vo.username, login_vo.password)
+    def login(self, login_form: LoginForm):
+        token = self.user_service.auth(login_form.username.data, login_form.password.data)
 
         return Response.success({'token': token})

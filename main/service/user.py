@@ -28,13 +28,13 @@ class UserService(CrudService):
         super().create(obj)
 
     def update(self, obj):
-        user = obj.id
+        user = self.dao.get(obj.id)
         if user is None:
             self.logger.error('user not found: id=%d', obj.id)
             raise Exception(SysCode.NOT_FOUND)
 
         username = obj.username
-        if user.username == username and user.id != id:
+        if user.username == username and user.id != obj.id:
             self.logger.error('username existed: id=%d, username=%', obj.id, username)
             raise Exception(BizCode.USER_NAME_EXISTED)
 
@@ -50,5 +50,5 @@ class UserService(CrudService):
             self.logger.error('password invalid: username=%s, password=%s', username, password)
             raise Exception(BizCode.USER_PWD_INVALID)
 
-        token = create_access_token(identity=user.serialize())
+        token = create_access_token(identity=user.to_dict())
         return token

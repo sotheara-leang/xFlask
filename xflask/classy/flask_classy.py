@@ -16,14 +16,13 @@ import re
 import sys
 
 from flask import request, Response, make_response
-from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
+from wtforms.form import FormMeta
 
-from xflask.classy.annotation import *
-from xflask.component import Component
-from xflask.marshmallow import ValidationError
-from xflask.marshmallow.schema import Schema
 from xflask.common.util.obj_util import to_dict
+from xflask.component import Component
+from xflask.exception import Exception
+from xflask.type.sys_code import SysCode
 
 _py2 = sys.version_info[0] == 2
 
@@ -212,75 +211,26 @@ class FlaskView(object):
             view_args = inspect.getfullargspec(view).annotations or {}
 
             injected_args = {}
-            for arg_name, arg_obj in view_args.items():
-                # Param
-                if isinstance(arg_obj, Param):
-                    param = arg_obj.name
-                    arg_value = request.args if param is None else request.args.get(param)
-
-                    if arg_obj.required is True and not arg_value:
-                        raise ValidationError("Parameter %s is missing" % param)
-                # Header
-                elif isinstance(arg_obj, Header):
-                    header = arg_obj.name
-                    if header is None:
-                        arg_value = request.headers
+            for arg_name, arg_annotation in view_args.items():
+                # form
+                if isinstance(arg_annotation, FormMeta):
+                    if request.is_json is True:
+                        form = arg_annotation(csrf_enabled=False)
                     else:
-                        arg_value = request.headers.get(arg_obj.name)
+                        form = arg_annotation()
 
-                    if arg_obj.required is True and not arg_value:
-                        raise ValidationError("Header %s is missing" % header)
-                # Json
-                elif request.is_json is True:
-                    if isinstance(arg_obj, JsonBody):
-                        body_type = arg_obj.type
-                        if body_type is None:
-                            arg_value = request.get_json()
-                        else:
-                            if issubclass(body_type, Schema):
-                                arg_value = body_type.deserialize(request.get_json(), arg_obj.exclude)
-                            else:
-                                arg_value = body_type(**request.get_json())
+                    if not form.validate():
+                        raise Exception(SysCode.INVALID, form.errors)
 
-                    elif isinstance(arg_obj, JsonField):
-                        field = arg_obj.name
-                        arg_value = request.get_json()
+                    arg_value = form
 
-                        if arg_obj.required is True and not arg_value or not arg_value.get(field):
-                            raise ValidationError("Field %s is missing" % field)
-
-                        arg_value = arg_value.get(field)
-
-                # Form
-                elif isinstance(arg_obj, FormBody):
-                    form_data = CombinedMultiDict((request.files, request.form)).to_dict()
-
-                    body_type = arg_obj.type
-                    if body_type is None:
-                        arg_value = form_data
-                    else:
-                        if issubclass(body_type, Schema):
-                            arg_value = body_type.deserialize(form_data, arg_obj.exclude)
-                        else:
-                            arg_value = body_type(**form_data)
-
-                elif isinstance(arg_obj, FormField):
-                    field = arg_obj.name
-                    form_data = CombinedMultiDict((request.files, request.form)).to_dict()
-
-                    if arg_obj.required is True and not form_data or not form_data.get(field):
-                        raise ValidationError("Field %s is missing" % field)
-
-                    arg_value = arg_value.get(field)
-
-                elif inspect.isclass(arg_obj) and issubclass(arg_obj, Component):
-                    arg_value = injector.get(arg_obj)
-
+                # component
+                elif inspect.isclass(arg_annotation) and issubclass(arg_annotation, Component):
+                    arg_value = injector.get(arg_annotation)
                 else:
                     continue
 
-                if arg_value is not None:
-                    injected_args[arg_name] = arg_value
+                injected_args[arg_name] = arg_value
 
             injected_args.update(request.view_args)
 
