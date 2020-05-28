@@ -1,5 +1,5 @@
 from xflask.application import Application
-from xflask.web.rest.filter import ApiLoggingFilter
+from xflask.web.filter import ApiLoggingFilter
 from xflask.sqlalchemy import db
 
 from main import *

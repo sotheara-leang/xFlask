@@ -1,8 +1,8 @@
 from main.type.edu_level import EducationLevel
 
-from xflask.wtforms import Form
+from xflask.wtforms import Form, PageForm
 from xflask.wtforms import StringField, IntegerField, EnumField
-from xflask.wtforms.validator import DataRequired, Length, Email
+from xflask.wtforms.validator import DataRequired, Length, Email, Optional
 
 
 class UserForm(Form):
@@ -13,3 +13,8 @@ class UserForm(Form):
     edu_level   = EnumField(EducationLevel, validators=[DataRequired()])
     role_id     = IntegerField(validators=[DataRequired()])
 
+
+class UserPageForm(PageForm):
+    username    = StringField(default='', validators=[Optional()])
+    edu_level   = EnumField(EducationLevel, default=None, validators=[Optional()])
+    role_id     = IntegerField(default=None, validators=[Optional()])

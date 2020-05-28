@@ -16,14 +16,15 @@ import re
 import sys
 
 from flask import request, Response, make_response
+from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
 from wtforms.form import FormMeta
+from wtforms import Form
 
 from xflask.common.util import to_dict, merge_dict
 from xflask.component import Component
 from xflask.exception import Exception
 from xflask.type.sys_code import SysCode
-from xflask.wtforms import Form
 
 _py2 = sys.version_info[0] == 2
 
@@ -211,21 +212,27 @@ class FlaskView(object):
 
             view_args = inspect.getfullargspec(view).annotations or {}
 
+            req_data = request.get_json() if request.is_json else CombinedMultiDict(
+                (request.files, request.form)).to_dict()
+
             injected_args = {}
             for arg_name, arg_annotation in view_args.items():
                 # form class
                 if isinstance(arg_annotation, FormMeta):
-                    form = arg_annotation()
+                    form = arg_annotation.from_json(req_data)
                     if not form.validate():
                         raise Exception(SysCode.INVALID, form.errors)
 
                     arg_value = form
                 # form instance
                 elif isinstance(arg_annotation, Form):
-                    form = arg_annotation.__class__(exclude=arg_annotation.exclude)
+                    form = arg_annotation.__class__()
+
+                    # read data from json
+                    form = form.from_json(req_data)
 
                     # remove excluded fields
-                    exclude_as_dict = get_exclude_as_dict(form.exclude)
+                    exclude_as_dict = get_exclude_as_dict(arg_annotation.exclude)
                     remove_exclude(form, exclude_as_dict)
 
                     if not form.validate():

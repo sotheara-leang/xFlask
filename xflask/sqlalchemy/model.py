@@ -11,13 +11,26 @@ from xflask.web.security import get_current_user
 class Model(db.Model):
     __abstract__ = True
 
-    def _get_readonly_fields(self):
+    @staticmethod
+    def _get_readonly_columns():
         return ['id']
+
+    @classmethod
+    def get_column(cls, col_name):
+        return cls.__table__.columns.get(col_name)
+
+    @classmethod
+    def get_sort_expression(cls, col_name, sort='asc'):
+        column = cls.get_column(col_name)
+        if column is None:
+            return None
+
+        return column.asc() if sort == 'asc' else column.desc()
 
     def to_dict(self, show=[], _hide=[], _path=None):
         """Return a dictionary representation of this model."""
 
-        hidden = self._hidden_fields if hasattr(self, '_hidden_fields') else []
+        hidden = self._hidden_columns if hasattr(self, '_hidden_columns') else []
         hidden = list(set(hidden) | set(_hide) - set(show))
 
         if not _path:
@@ -139,11 +152,11 @@ class Model(db.Model):
 
         _force = kwargs.pop("_force", False)
 
-        readonly = self._readonly_fields if hasattr(self, '_readonly_fields') else []
-        if hasattr(self, '_hidden_fields'):
-            readonly += self._hidden_fields
+        readonly = self._readonly_columns if hasattr(self, '_readonly_columns') else []
+        if hasattr(self, '_hidden_columns'):
+            readonly += self._hidden_columns
 
-        readonly += self._get_readonly_fields()
+        readonly += self._get_readonly_columns()
 
         changes = {}
 
@@ -247,8 +260,9 @@ class AuditModel(Model):
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
-    def _get_readonly_fields(self):
-        return super()._get_readonly_fields() + ['modified_at', 'created_at', 'modified_by', 'created_by']
+    @staticmethod
+    def _get_readonly_columns():
+        return super()._get_readonly_columns() + ['modified_at', 'created_at', 'modified_by', 'created_by']
 
     @declared_attr
     def created_by(self):
@@ -279,8 +293,9 @@ class AuditModel(Model):
 class SoftModel:
     deleted_at = db.Column(db.DateTime)
 
-    def _get_readonly_fields(self):
-        return super()._get_readonly_fields() + ['deleted_at', 'deleted_by']
+    @staticmethod
+    def _get_readonly_columns(self):
+        return super()._get_readonly_columns() + ['deleted_at', 'deleted_by']
 
     @declared_attr
     def deleted_by(self):

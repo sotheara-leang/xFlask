@@ -15,6 +15,6 @@ class AuthController(Controller):
 
     @route('/api/login', methods=['POST'])
     def login(self, login_form: LoginForm):
-        token = self.user_service.auth(login_form.username.data, login_form.password.data)
+        token = self.user_service.auth_user(login_form.username.data, login_form.password.data)
 
         return Response.success({'token': token})

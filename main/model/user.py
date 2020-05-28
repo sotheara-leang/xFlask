@@ -16,6 +16,6 @@ class User(AuditModel):
 
     role_id     = Column(Integer, ForeignKey('role.id'))
 
-    _hidden_fields = [
+    _hidden_columns = [
         'password'
     ]

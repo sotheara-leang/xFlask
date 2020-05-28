@@ -18,7 +18,7 @@ from xflask.web.error_handler import SimpleErrorHandler
 from xflask.web.filter import Filter
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.security.jwt_auth_manager import JwtAuthManager
-from xflask.web.serializer import EnumSerializer, DateTimeSerializer, ModelSerializer
+from xflask.web.serializer import EnumSerializer, DateTimeSerializer
 
 
 class Application(object):
