@@ -19,10 +19,11 @@ from flask import request, Response, make_response
 from werkzeug.routing import parse_rule
 from wtforms.form import FormMeta
 
-from xflask.common.util.obj_util import to_dict
+from xflask.common.util import to_dict, merge_dict
 from xflask.component import Component
 from xflask.exception import Exception
 from xflask.type.sys_code import SysCode
+from xflask.wtforms import Form
 
 _py2 = sys.version_info[0] == 2
 
@@ -212,18 +213,25 @@ class FlaskView(object):
 
             injected_args = {}
             for arg_name, arg_annotation in view_args.items():
-                # form
+                # form class
                 if isinstance(arg_annotation, FormMeta):
-                    if request.is_json is True:
-                        form = arg_annotation(csrf_enabled=False)
-                    else:
-                        form = arg_annotation()
+                    form = arg_annotation()
+                    if not form.validate():
+                        raise Exception(SysCode.INVALID, form.errors)
+
+                    arg_value = form
+                # form instance
+                elif isinstance(arg_annotation, Form):
+                    form = arg_annotation.__class__(exclude=arg_annotation.exclude)
+
+                    # remove excluded fields
+                    exclude_as_dict = get_exclude_as_dict(form.exclude)
+                    remove_exclude(form, exclude_as_dict)
 
                     if not form.validate():
                         raise Exception(SysCode.INVALID, form.errors)
 
                     arg_value = form
-
                 # component
                 elif inspect.isclass(arg_annotation) and issubclass(arg_annotation, Component):
                     arg_value = injector.get(arg_annotation)
@@ -331,6 +339,38 @@ def get_interesting_members(base_class, cls):
             and not member[0].startswith("_")
             and not member[0].startswith("before_")
             and not member[0].startswith("after_")]
+
+
+def remove_exclude(form, exclude_dict):
+    for k, v in exclude_dict.items():
+        if not form.__contains__(k):
+            continue
+
+        field_ = form.__getitem__(k)
+
+        if v is None:
+            form.__delitem__(k)
+        else:
+            sub_form = field_.form
+            remove_exclude(sub_form, v)
+
+
+def get_exclude_as_dict(exclude):
+    ret_data = {}
+    for field_ in exclude:
+        names = field_.split('.')
+        if len(names) == 1:  # normal field
+            ret_data[names[0]] = None
+        else:
+            sub_exclude = ret_data.get(names[0])
+            if sub_exclude is None:
+                sub_exclude = {}
+
+            merge_dict(sub_exclude, get_exclude_as_dict(names[1:]))
+
+            ret_data[names[0]] = sub_exclude
+
+    return ret_data
 
 
 def get_true_argspec(method):

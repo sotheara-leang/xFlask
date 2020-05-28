@@ -2,7 +2,6 @@ import logging
 
 from flask import render_template
 from flask import request
-from marshmallow.exceptions import ValidationError
 from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
 
 from xflask.common.util import to_dict
@@ -54,10 +53,7 @@ class SimpleErrorHandler(ErrorHandler):
         self.logger.exception('400 error')
 
         if request.path.startswith(self.api_route):
-            if isinstance(e, ValidationError):
-                return to_dict(Response.fail(SysCode.INVALID, e.messages))
-            else:
-                return Response.fail(SysCode.INVALID).to_dict()
+            return Response.fail(SysCode.INVALID).to_dict()
         else:
             return render_template(self.template_folder + '400.html')
 

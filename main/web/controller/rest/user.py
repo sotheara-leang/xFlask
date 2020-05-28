@@ -1,6 +1,6 @@
 from injector import inject
 
-from main.web.form.user import *
+from main.web.form.user import UserForm
 from main.model.user import User
 from main.service.user import UserService
 from xflask.web import route
@@ -29,13 +29,13 @@ class UserController(Controller):
         return Response.success(user)
 
     @route('', methods=['POST'])
-    def create(self, user_form: CreateUserForm):
+    def create(self, user_form: UserForm(exclude=['id'])):
         self.user_service.create(User(**user_form.data))
 
         return Response.success()
 
     @route('', methods=['PUT'])
-    def update(self, user_form: UpdateUserForm):
+    def update(self, user_form: UserForm):
         self.user_service.update(User(**user_form.data))
 
         return Response.success()

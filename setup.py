@@ -13,10 +13,12 @@ def requirement():
         'Flask-Testing',
         'Flask-Injector',
         'Flask-JWT-Extended',
+        'Flask-WTF',
+        'WTForms',
+        'email-validator',
         'Werkzeug==0.16.1',
-        'marshmallow',
-        'psycopg2-binary',
-        'PyYAML'
+        'PyYAML',
+        'psycopg2-binary'
     ]
 
 setup(
