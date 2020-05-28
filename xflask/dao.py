@@ -38,6 +38,8 @@ class Dao(Component):
             self.query().filter_by(**criterion).update(obj if isinstance(obj, dict) else obj.to_dict())
         elif isinstance(obj, dict):
             self.query().filter_by(**self._get_pk_criterion(obj)).update(obj)
+        else:
+            self._merge(obj)
 
     @transactional()
     def delete(self, obj=None, **criterion):

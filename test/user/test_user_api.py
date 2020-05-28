@@ -24,8 +24,8 @@ class TestApiUser(TestCase):
         print('\n', response.json)
 
     def test_update(self):
-        user = dict(id=1, username='user1', password='12345', role_id=1,
-                    email='new@example.com', edu_level=EducationLevel.BACHELOR.code())
+        user = dict(id=1, username='user2', password='ggggg', role_id=1,
+                    email='new@example1.com', edu_level=EducationLevel.BACHELOR.code())
 
         response = self.client.put('/api/user/', json=user)
 
