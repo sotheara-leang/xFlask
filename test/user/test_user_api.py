@@ -6,12 +6,29 @@ from main.type.edu_level import EducationLevel
 class TestApiUser(TestCase):
 
     def test_get(self):
-        response = self.client.get('/api/user/1')
+        response = self.client.get('/api/user/6')
 
         print('\n', response.json)
 
     def test_get_all(self):
         response = self.client.get('/api/user/')
+
+        print('\n', response.json)
+
+    def test_get_page(self):
+        data = dict(
+            page=1,
+            per_page=20,
+            username='',
+            edu_level='',
+            role_id='',
+            sort=[dict(
+                field='username',
+                order='asc'
+            )]
+        )
+
+        response = self.client.post('/api/user/page', json=data)
 
         print('\n', response.json)
 

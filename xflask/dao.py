@@ -45,7 +45,7 @@ class Dao(Component):
         if len(criterion) > 0:
             self.query().filter_by(**criterion).update(obj if isinstance(obj, dict) else obj.to_dict())
         elif isinstance(obj, dict):
-            self.query().filter_by(**self._get_pk_criterion(obj)).update(obj)
+            self.query().filter_by(**self._get_pk_criterion_by_object(obj)).update(obj)
         else:
             self._merge(obj)
 
@@ -55,7 +55,7 @@ class Dao(Component):
             self.query().filter_by(**criterion).delete()
         elif obj is not None:
             if isinstance(obj, (int, float)) or isinstance(obj, tuple):
-                self.query().filter_by(**self._get_pk_criterion(obj)).delete()
+                self.query().filter_by(**self._get_pk_criterion_by_object(obj)).delete()
             else:
                 session.delete(obj)
 
@@ -90,6 +90,12 @@ class Dao(Component):
 
         return criterion
 
+    def _get_pk_criterion_by_object(self, obj):
+        criterion = {}
+        for idx, pk in enumerate(self.model.__mapper__.primary_key):
+            criterion[pk.name] = obj[pk.name]
+
+        return criterion
 
 def filter_criterion(**criterion):
     ret_dict = {}

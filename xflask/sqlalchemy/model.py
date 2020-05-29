@@ -1,8 +1,9 @@
+from datetime import datetime
+
 from flask import json
 from sqlalchemy import inspect
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.attributes import QueryableAttribute
-from sqlalchemy.sql import func
 
 from xflask.sqlalchemy import db
 from xflask.web.security import get_current_user
@@ -257,8 +258,8 @@ class Model(db.Model):
 class AuditModel(Model):
     __abstract__ = True
 
-    created_at = db.Column(db.DateTime)
-    modified_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    modified_at = db.Column(db.DateTime, onupdate=datetime.now)
 
     @staticmethod
     def _get_readonly_columns():
@@ -266,31 +267,33 @@ class AuditModel(Model):
 
     @declared_attr
     def created_by(self):
-        return db.Column(db.Integer)
+        return db.Column(db.Integer, default=_current_user_id_or_none)
 
     @declared_attr
     def modified_by(self):
-        return db.Column(db.Integer)
+        return db.Column(db.Integer, onupdate=_current_user_id_or_none)
 
-    @staticmethod
-    def before_insert(mapper, connection, instance):
-        user = get_current_user() or {}
-        instance.created_at = func.now()
-        instance.created_by = user.get('id')
+    # @staticmethod
+    # def before_insert(mapper, connection, instance):
+    #     user = get_current_user() or {}
+    #     instance.created_at = func.now()
+    #     instance.created_by = user.get('id')
+    #
+    # @staticmethod
+    # def before_update(mapper, connection, instance):
+    #     user = get_current_user() or {}
+    #     instance.modified_at = func.now()
+    #     instance.modified_by = user.get('id')
 
-    @staticmethod
-    def before_update(mapper, connection, instance):
-        user = get_current_user() or {}
-        instance.modified_at = func.now()
-        instance.modified_by = user.get('id')
-
-    @classmethod
-    def __declare_last__(cls):
-        db.event.listen(cls, 'before_insert', cls.before_insert)
-        db.event.listen(cls, 'before_update', cls.before_insert)
+    # @classmethod
+    # def __declare_last__(cls):
+    #     db.event.listen(cls, 'before_insert', cls.before_insert)
+    #     db.event.listen(cls, 'before_update', cls.before_update)
 
 
-class SoftModel:
+class SoftModel(AuditModel):
+    __abstract__ = True
+
     deleted_at = db.Column(db.DateTime)
 
     @staticmethod
@@ -301,12 +304,21 @@ class SoftModel:
     def deleted_by(self):
         return db.Column(db.Integer)
 
-    @staticmethod
-    def before_delete(mapper, connection, instance):
-        user = get_current_user() or {}
-        instance.deleted_at = func.now()
-        instance.deleted_by = user.get('id')
+    def init_soft_columns(self):
+        self.deleted_at = datetime.now()
+        self.deleted_by = _current_user_id_or_none()
 
-    @classmethod
-    def __declare_last__(cls):
-        db.event.listen(cls, 'before_delete', cls.before_delete)
+    # @staticmethod
+    # def before_delete(mapper, connection, instance):
+    #     user = get_current_user() or {}
+    #     instance.deleted_at = func.now()
+    #     instance.deleted_by = user.get('id')
+
+    # @classmethod
+    # def __declare_last__(cls):
+    #     db.event.listen(cls, 'before_delete', cls.before_delete)
+
+
+def _current_user_id_or_none():
+    user = get_current_user() or {}
+    return user.get('id')

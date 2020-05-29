@@ -19,7 +19,7 @@ class TestUserDao(TestCase):
         self.user_dao.exist(9)
 
     def test_create(self):
-        user = User(username='user1', password='123',
+        user = User(username='user3', password='123', role_id=1,
                     email='user1@example.com', edu_level=EducationLevel.BACHELOR)
 
         self.user_dao.insert(user)
@@ -58,13 +58,13 @@ class TestUserDao(TestCase):
         print('\n', user)
 
     def test_update(self):
-        user = self.user_dao.get(8)
+        user = self.user_dao.get(70)
         user.email = 'new@email.com'
 
         self.user_dao.update(user)
 
     def test_update_by_dict(self):
-        user = {'id': 8, 'email': 'user31@gmail.com'}
+        user = {'id': 71, 'email': 'user31@gmail.com'}
 
         self.user_dao.update(user)
 
