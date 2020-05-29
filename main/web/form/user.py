@@ -15,6 +15,6 @@ class UserForm(Form):
 
 
 class UserPageForm(PageForm):
-    username    = StringField(default='', validators=[Optional()])
-    edu_level   = EnumField(EducationLevel, default=None, validators=[Optional(), EnumValidator(EducationLevel)])
-    role_id     = IntegerField(default=None, validators=[Optional()])
+    username    = StringField(default=None)
+    edu_level   = EnumField(EducationLevel, default=None, validators=[EnumValidator(EducationLevel)])
+    role_id     = IntegerField(default=None)

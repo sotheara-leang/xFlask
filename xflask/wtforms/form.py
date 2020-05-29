@@ -14,16 +14,19 @@ class Form(Form):
         exclude = kwargs.get('exclude') or []
         self.exclude = exclude
 
+    def get_dto(self):
+        return Dto(**self.data)
+
 
 class SortForm(Form):
-    field   = StringField()
-    order   = SelectField(choices=[('asc', ''), ('desc', '')])
+    field = StringField()
+    order = SelectField(choices=[('asc', ''), ('desc', '')])
 
 
 class PageForm(Form):
-    page        = IntegerField(default=1)
-    per_page    = IntegerField(default=30)
-    sort        = FieldList(FormField(SortForm), default=[])
+    page = IntegerField(default=1)
+    per_page = IntegerField(default=30)
+    sort = FieldList(FormField(SortForm), default=[])
 
     def get_page(self):
         return Dto(page=self.page.data, per_page=self.per_page.data)

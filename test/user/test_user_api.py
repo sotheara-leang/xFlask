@@ -19,9 +19,9 @@ class TestApiUser(TestCase):
         data = dict(
             page=1,
             per_page=20,
-            username='',
-            edu_level='',
-            role_id='',
+            username=None,
+            edu_level=None,
+            role_id=None,
             sort=[dict(
                 field='username',
                 order='asc'
