@@ -18,12 +18,11 @@ class UserService(CrudService):
     def __init__(self, dao: UserDao):
         super(UserService, self).__init__(dao)
 
-    def get_page(self, page, sort=None, criterion=None):
+    def get_page(self, page, sort=[], criterion=None):
         # sort
         sort_ = []
-        if sort is not None:
-            for e in sort:
-                sort_.append(User.get_sort_expression(e.field, e.order))
+        for e in sort:
+            sort_.append(User.get_sort_expression(e.field, e.order))
 
         # criterion
         criterion_ = {}

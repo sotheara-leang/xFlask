@@ -16,7 +16,6 @@ class Form(Form):
 
 
 class SortForm(Form):
-    target  = StringField(default=0)
     field   = StringField()
     order   = SelectField(choices=[('asc', ''), ('desc', '')])
 
@@ -32,7 +31,7 @@ class PageForm(Form):
     def get_sort(self):
         ret_data = []
         for sort in self.sort:
-            ret_data.append(Dto(target=sort.target.data, field=sort.field.data, order=sort.order.data))
+            ret_data.append(Dto(field=sort.field.data, order=sort.order.data))
         return ret_data
 
     def get_criterion(self):

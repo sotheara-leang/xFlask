@@ -53,7 +53,7 @@ class SimpleErrorHandler(ErrorHandler):
         self.logger.exception('400 error')
 
         if request.path.startswith(self.api_route):
-            return Response.fail(SysCode.INVALID).to_dict()
+            return to_dict(Response.fail(SysCode.INVALID))
         else:
             return render_template(self.template_folder + '400.html')
 

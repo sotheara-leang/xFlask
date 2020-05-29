@@ -29,5 +29,5 @@ class Response(object):
         return Response(SysCode.EXISTED)
 
     @classmethod
-    def invalid(cls):
-        return Response(SysCode.INVALID)
+    def invalid(cls, data=None):
+        return Response(SysCode.INVALID, data)
