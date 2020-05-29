@@ -1,7 +1,7 @@
-from test.test_case import *
 from main.dao.user import UserDao
 from main.model.user import User
 from main.type.edu_level import EducationLevel
+from test.test_case import *
 
 
 class TestUserDao(TestCase):
@@ -11,11 +11,15 @@ class TestUserDao(TestCase):
 
         self.user_dao = application.get_component(UserDao)
 
+    def test_count(self):
+        count = self.user_dao.count(username='user2')
+        print(count)
+
     def test_exist(self):
         self.user_dao.exist(9)
 
     def test_create(self):
-        user = User(username='user1', password='123',
+        user = User(username='user3', password='123', role_id=1,
                     email='user1@example.com', edu_level=EducationLevel.BACHELOR)
 
         self.user_dao.insert(user)
@@ -34,18 +38,33 @@ class TestUserDao(TestCase):
         users = self.user_dao.get_all()
         print('\n', users)
 
+    def test_creates_user(self):
+        for i in range(50):
+            username = 'user%s' % i
+            edu_level = EducationLevel.BACHELOR if i % 2 == 0 else EducationLevel.MASTER
+            email = 'user%s@example.com' % i
+
+            user = User(username=username, password='', email=email, edu_level=edu_level, role_id=1)
+
+            self.user_dao.insert(user)
+
+    def test_get_page(self):
+        pagination = self.user_dao.get_page(1, per_page=20, order=(User.id.asc(),), edu_level=EducationLevel.MASTER)
+
+        print(pagination)
+
     def test_get_by_username(self):
         user = self.user_dao.get_by_username(username='user1')
         print('\n', user)
 
     def test_update(self):
-        user = self.user_dao.get(8)
+        user = self.user_dao.get(70)
         user.email = 'new@email.com'
 
         self.user_dao.update(user)
 
     def test_update_by_dict(self):
-        user = {'id': 8, 'email': 'user31@gmail.com'}
+        user = {'id': 71, 'email': 'user31@gmail.com'}
 
         self.user_dao.update(user)
 

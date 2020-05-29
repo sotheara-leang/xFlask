@@ -3,6 +3,7 @@ import logging
 import sys
 
 from flask import Flask
+from flask.json import JSONEncoder
 from flask_injector import FlaskInjector, request
 from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
@@ -17,31 +18,28 @@ from xflask.web.error_handler import SimpleErrorHandler
 from xflask.web.filter import Filter
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.security.jwt_auth_manager import JwtAuthManager
+from xflask.web.serializer import EnumSerializer, DateTimeSerializer
 
 
 class Application(object):
-    DEF_CONF_FILE           = 'conf/server.yml'
-    DEF_LOG_FILE            = 'conf/logging.yml'
-    DEF_BLUEPRINT_PKGS      = []
-    DEF_CONTROLLER_PKGS     = ['main.controller.mvc', 'main.controller.rest']
-    DEF_COMPONENT_PKGS      = ['main.dao', 'main.service']
-    DEF_FILTERS             = [JwtAuthFilter()]
-    DEF_ERROR_HANDLER       = SimpleErrorHandler()
-    DEF_AUTH_MANAGER        = JwtAuthManager()
+    DEF_CONF_FILE = 'conf/server.yml'
+    DEF_LOG_FILE = 'conf/logging.yml'
 
-    def __init__(self, db, conf_file=None,
-                 component_pkgs=DEF_COMPONENT_PKGS, controller_pkgs=DEF_CONTROLLER_PKGS, blueprint_pkgs=DEF_BLUEPRINT_PKGS,
-                 filters=DEF_FILTERS, error_handler=DEF_ERROR_HANDLER, auth_manager=DEF_AUTH_MANAGER):
+    DEF_FILTERS = [JwtAuthFilter()]
+    DEF_ERROR_HANDLER = SimpleErrorHandler()
+    DEF_AUTH_MANAGER = JwtAuthManager()
 
-        self.db                 = db
-        self.conf_file          = conf_file or get_file_path('main/conf/server.yml')
-        self.component_pkgs     = component_pkgs
-        self.blueprint_pkgs     = blueprint_pkgs
-        self.controller_pkgs    = controller_pkgs
+    DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer()]
 
-        self.filters            = filters or []
-        self.error_handler      = error_handler
-        self.auth_manager       = auth_manager
+    def __init__(self, db, conf_file=None, filters=None, error_handler=None, auth_manager=None, json_serializers=[]):
+
+        self.db = db
+        self.conf_file = conf_file or get_file_path('main/conf/server.yml')
+
+        self.filters = filters or self.DEF_AUTH_MANAGER
+        self.error_handler = error_handler or self.DEF_ERROR_HANDLER
+        self.auth_manager = auth_manager or self.DEF_AUTH_MANAGER
+        self.json_serializers = json_serializers + self.DEF_JSON_SERIALIZERS
 
         self._pre_init()
 
@@ -58,6 +56,12 @@ class Application(object):
         self._init_app()
 
         self._init_db()
+
+        # register xflask extension
+        if not hasattr(self.app, 'extensions'):
+            self.app.extensions = {}
+
+        self.app.extensions['xflask'] = self
 
     def init(self):
         self._init_error_handler()
@@ -91,17 +95,26 @@ class Application(object):
 
     def _init_app(self):
         self.app = Flask(self.conf.get('APP_NAME'),
-                    static_folder=self.conf.get('STATIC_DIR'),
-                    template_folder=self.conf.get('TEMPLATE_DIR'),
-                    root_path=get_root_dir())
+                         static_folder=self.conf.get('STATIC_DIR'),
+                         template_folder=self.conf.get('TEMPLATE_DIR'),
+                         root_path=get_root_dir())
 
+        # config
         self.app.config.from_mapping(self.conf.cfg)
 
-        #
-        if not hasattr(self.app, 'extensions'):
-            self.app.extensions = {}
+        # json encoder
+        json_serializers = self.json_serializers
 
-        self.app.extensions['xflask'] = self
+        class _JsonEncoder(JSONEncoder):
+
+            def default(self, obj):
+                for serializer in json_serializers:
+                    if serializer.check(obj):
+                        return serializer.serialize(obj)
+
+                return super().default(obj)
+
+        self.app.json_encoder = _JsonEncoder
 
     def _init_db(self):
         if self.conf.exist('SQLALCHEMY_DATABASE_URI'):
@@ -126,7 +139,7 @@ class Application(object):
                 self.logger.debug('!!! Invalid filter: %s', filter_.__name__)
 
     def _register_blueprints(self):
-        for package in self.blueprint_pkgs:
+        for package in self.conf.get('BLUEPRINT_PKG'):
             try:
                 for name in find_modules(package):
                     try:
@@ -156,14 +169,15 @@ class Application(object):
                 binder.bind(SQLAlchemy, to=self.db, scope=singleton)
 
             # component
-            for package in self.component_pkgs:
+            for package in self.conf.get('COMPONENT_PKG'):
                 try:
                     self.logger.debug('>>> Scan modules in %s', package)
 
                     for pkg_name in find_modules(package):
                         try:
                             module = import_string(pkg_name)
-                            class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == module.__name__]
+                            class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
+                                           m[1].__module__ == module.__name__]
 
                             valid_module = False
                             for class_name in class_names:
@@ -187,7 +201,7 @@ class Application(object):
                                 del module
 
                         except Exception as e:
-                            self.logger.exception('!!! Failed to initialize component in %s', pkg_name)
+                            self.logger.exception('!!! Failed to initialize component in %s', pkg_name, e)
                             sys.exit()
 
                 except Exception:
@@ -196,14 +210,15 @@ class Application(object):
         self.flask_injector = FlaskInjector(app=self.app, modules=[configure])
 
     def _register_controllers(self):
-        for package in self.controller_pkgs:
+        for package in self.conf.get('CONTROLLER_PKG'):
             try:
                 self.logger.debug('>>> Scan modules in %s', package)
 
                 for module_ns in find_modules(package):
                     try:
                         module = import_string(module_ns)
-                        class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if m[1].__module__ == module.__name__]
+                        class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
+                                       m[1].__module__ == module.__name__]
 
                         valid_module = False
                         for class_name in class_names:
@@ -228,8 +243,8 @@ class Application(object):
                         if not valid_module:
                             del module
 
-                    except Exception:
-                        self.logger.exception('!!! Failed to initialize controller in %s', module_ns)
+                    except Exception as e:
+                        self.logger.exception('!!! Failed to initialize controller in %s', module_ns, e)
                         sys.exit()
 
             except Exception:

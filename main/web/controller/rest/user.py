@@ -1,11 +1,12 @@
 from injector import inject
 
-from main.controller.vo.user import UserVo
 from main.model.user import User
 from main.service.user import UserService
-from xflask.web import route, JsonBody
+from main.web.form.user import UserForm, UserPageForm
+from xflask.sqlalchemy.util import Page
+from xflask.web import route
 from xflask.web.controller import Controller
-from xflask.web.rest.response import Response
+from xflask.web.response import Response
 
 
 class UserController(Controller):
@@ -28,15 +29,22 @@ class UserController(Controller):
 
         return Response.success(user)
 
+    @route('page', methods=['POST'])
+    def get_page(self, page_form: UserPageForm):
+        pagination = self.user_service.get_page(page_form.get_page(), page_form.get_sort(), page_form.get_criterion())
+        page = Page.from_pagination(pagination)
+
+        return Response.success(page)
+
     @route('', methods=['POST'])
-    def create(self, user: JsonBody(UserVo, exclude=['id'])):
-        self.user_service.create(User(**user.__dict__))
+    def create(self, user_form: UserForm(exclude=['id'])):
+        self.user_service.create_user(User(**user_form.data))
 
         return Response.success()
 
     @route('', methods=['PUT'])
-    def update(self, user: JsonBody(UserVo)):
-        self.user_service.update(User(**user))
+    def update(self, user_form: UserForm):
+        self.user_service.update_user(User(**user_form.data))
 
         return Response.success()
 

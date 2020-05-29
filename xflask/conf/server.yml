@@ -7,11 +7,24 @@ PORT: 8000
 DEBUG: true
 ENV: development
 
+MODEL_PKG:
+  - main.model
+
+COMPONENT_PKG:
+  - main.dao
+  - main.service
+
+CONTROLLER_PKG:
+  - main.web.controller.mvc
+  - main.web.controller.rest
+
+BLUEPRINT_PKG: []
+
 SECRET_KEY: AAAAAA
 
-STATIC_DIR: main/web/resource
+STATIC_DIR: webapp/public
 
-TEMPLATE_DIR: main/web/view
+TEMPLATE_DIR: webapp/view
 
 LOGGING: true
 LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml
@@ -20,4 +33,5 @@ LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml
 JWT_SECRET_KEY: BBBBBB
 
 ### SQLALCHEMY ###
-SQLALCHEMY_TRACK_MODIFICATIONS: false
+SQLALCHEMY_TRACK_MODIFICATIONS: true
+SQLALCHEMY_ECHO: true

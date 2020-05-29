@@ -7,8 +7,11 @@ class Dao(Component):
     def __init__(self, model):
         self.model = model
 
+    def count(self, **criterion):
+        return self.query().filter_by(**criterion).count()
+
     def exist(self, id=None, **criterion):
-        query =  self.query().filter_by(**self._get_pk_criterion(id)) \
+        query = self.query().filter_by(**self._get_pk_criterion(id)) \
             if id is not None else self.query().filter_by(**criterion)
         return query.scalar() is not None
 
@@ -16,8 +19,13 @@ class Dao(Component):
         return self.query().filter_by(**self._get_pk_criterion(id)).first() \
             if id is not None else self.query().filter_by(**criterion).first()
 
-    def get_all(self, **criterion):
-        return self.query().filter_by(**criterion).all()
+    def get_all(self, order=(), **criterion):
+        return self.query().filter_by(**criterion).order_by(*order).all()
+
+    def get_page(self, page=1, per_page=30, order=(), **criterion):
+        criterion = filter_criterion(**criterion)
+
+        return self.query().filter_by(**criterion).order_by(*order).paginate(page, per_page=per_page)
 
     def query(self, *models):
         if models is None or len(models) == 0:
@@ -37,7 +45,9 @@ class Dao(Component):
         if len(criterion) > 0:
             self.query().filter_by(**criterion).update(obj if isinstance(obj, dict) else obj.to_dict())
         elif isinstance(obj, dict):
-            self.query().filter_by(**self._get_pk_criterion(obj)).update(obj)
+            self.query().filter_by(**self._get_pk_criterion_by_object(obj)).update(obj)
+        else:
+            self._merge(obj)
 
     @transactional()
     def delete(self, obj=None, **criterion):
@@ -45,13 +55,13 @@ class Dao(Component):
             self.query().filter_by(**criterion).delete()
         elif obj is not None:
             if isinstance(obj, (int, float)) or isinstance(obj, tuple):
-                self.query().filter_by(**self._get_pk_criterion(obj)).delete()
+                self.query().filter_by(**self._get_pk_criterion_by_object(obj)).delete()
             else:
                 session.delete(obj)
 
     def delete_all(self):
         self.query().delete()
-    
+
     def _begin(self, subtransactions=True, nested=False):
         session.begin(subtransactions=subtransactions, nested=nested)
 
@@ -69,7 +79,7 @@ class Dao(Component):
 
     def _rollback(self):
         session.rollback()
-        
+
     def _get_pk_criterion(self, id):
         if isinstance(id, (int, float)):
             id = (id,)
@@ -79,3 +89,17 @@ class Dao(Component):
             criterion[pk.name] = id[idx]
 
         return criterion
+
+    def _get_pk_criterion_by_object(self, obj):
+        criterion = {}
+        for idx, pk in enumerate(self.model.__mapper__.primary_key):
+            criterion[pk.name] = obj[pk.name]
+
+        return criterion
+
+def filter_criterion(**criterion):
+    ret_dict = {}
+    for field, value in criterion.items():
+        if value is not None:
+            ret_dict[field] = value
+    return ret_dict

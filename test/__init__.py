@@ -1,7 +1,7 @@
 from xflask.common.util import setup_env
 from xflask.application import Application
 from xflask.sqlalchemy import db
-from xflask.web.rest.filter import ApiLoggingFilter
+from xflask.web.filter import ApiLoggingFilter
 
 
 setup_env('xFlask')

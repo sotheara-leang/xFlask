@@ -18,6 +18,9 @@ class CrudService(Service):
         else:
             raise Exception('Invalid dao')
 
+    def count(self, **criterion):
+        return self.dao.count(**criterion)
+
     def exist(self, id=None, **criterion):
         return self.dao.exist(id, **criterion)
 
@@ -26,6 +29,9 @@ class CrudService(Service):
 
     def get_all(self, **criterion):
         return self.dao.get_all(**criterion)
+
+    def get_page(self, page, sort, criterion):
+        return self.dao.get_page(page.page, page.per_page, sort, **criterion)
 
     def query(self, *models):
         return self.dao.query(*models)

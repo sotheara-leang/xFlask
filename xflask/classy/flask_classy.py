@@ -18,12 +18,13 @@ import sys
 from flask import request, Response, make_response
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
+from wtforms.form import FormMeta
+from wtforms import Form
 
-from xflask.classy.annotation import *
-from xflask.common.util.obj_util import serialize
+from xflask.common.util import to_dict, merge_dict
 from xflask.component import Component
-from xflask.marshmallow import ValidationError
-from xflask.marshmallow.schema import Schema
+from xflask.exception import Exception
+from xflask.type.sys_code import SysCode
 
 _py2 = sys.version_info[0] == 2
 
@@ -211,76 +212,40 @@ class FlaskView(object):
 
             view_args = inspect.getfullargspec(view).annotations or {}
 
+            req_data = request.get_json() if request.is_json else CombinedMultiDict(
+                (request.files, request.form)).to_dict()
+
             injected_args = {}
-            for arg_name, arg_obj in view_args.items():
-                # Param
-                if isinstance(arg_obj, Param):
-                    param = arg_obj.name
-                    arg_value = request.args if param is None else request.args.get(param)
+            for arg_name, arg_annotation in view_args.items():
+                # form class
+                if isinstance(arg_annotation, FormMeta):
+                    form = arg_annotation.from_json(req_data)
+                    if not form.validate():
+                        raise Exception(SysCode.INVALID, form.errors)
 
-                    if arg_obj.required is True and not arg_value:
-                        raise ValidationError("Parameter %s is missing" % param)
-                # Header
-                elif isinstance(arg_obj, Header):
-                    header = arg_obj.name
-                    if header is None:
-                        arg_value = request.headers
-                    else:
-                        arg_value = request.headers.get(arg_obj.name)
+                    arg_value = form
+                # form instance
+                elif isinstance(arg_annotation, Form):
+                    form = arg_annotation.__class__()
 
-                    if arg_obj.required is True and not arg_value:
-                        raise ValidationError("Header %s is missing" % header)
-                # Json
-                elif request.is_json is True:
-                    if isinstance(arg_obj, JsonBody):
-                        body_type = arg_obj.type
-                        if body_type is None:
-                            arg_value = request.get_json()
-                        else:
-                            if issubclass(body_type, Schema):
-                                arg_value = body_type.deserialize(request.get_json(), arg_obj.exclude)
-                            else:
-                                arg_value = body_type(**request.get_json())
+                    # read data from json
+                    form = form.from_json(req_data)
 
-                    elif isinstance(arg_obj, JsonField):
-                        field = arg_obj.name
-                        arg_value = request.get_json()
+                    # remove excluded fields
+                    exclude_as_dict = get_exclude_as_dict(arg_annotation.exclude)
+                    remove_exclude(form, exclude_as_dict)
 
-                        if arg_obj.required is True and not arg_value or not arg_value.get(field):
-                            raise ValidationError("Field %s is missing" % field)
+                    if not form.validate():
+                        raise Exception(SysCode.INVALID, form.errors)
 
-                        arg_value = arg_value.get(field)
-
-                # Form
-                elif isinstance(arg_obj, FormBody):
-                    form_data = CombinedMultiDict((request.files, request.form)).to_dict()
-
-                    body_type = arg_obj.type
-                    if body_type is None:
-                        arg_value = form_data
-                    else:
-                        if issubclass(body_type, Schema):
-                            arg_value = body_type.deserialize(form_data, arg_obj.exclude)
-                        else:
-                            arg_value = body_type(**form_data)
-
-                elif isinstance(arg_obj, FormField):
-                    field = arg_obj.name
-                    form_data = CombinedMultiDict((request.files, request.form)).to_dict()
-
-                    if arg_obj.required is True and not form_data or not form_data.get(field):
-                        raise ValidationError("Field %s is missing" % field)
-
-                    arg_value = arg_value.get(field)
-
-                elif inspect.isclass(arg_obj) and issubclass(arg_obj, Component):
-                    arg_value = injector.get(arg_obj)
-
+                    arg_value = form
+                # component
+                elif inspect.isclass(arg_annotation) and issubclass(arg_annotation, Component):
+                    arg_value = injector.get(arg_annotation)
                 else:
                     continue
 
-                if arg_value is not None:
-                    injected_args[arg_name] = arg_value
+                injected_args[arg_name] = arg_value
 
             injected_args.update(request.view_args)
 
@@ -290,7 +255,7 @@ class FlaskView(object):
 
             if not isinstance(response, dict) and not isinstance(response, str) \
                     and not isinstance(response, tuple) and not isinstance(response, Response):
-                response = serialize(response)
+                response = to_dict(response)
 
             if not isinstance(response, Response):
                 response = make_response(response)
@@ -383,6 +348,38 @@ def get_interesting_members(base_class, cls):
             and not member[0].startswith("after_")]
 
 
+def remove_exclude(form, exclude_dict):
+    for k, v in exclude_dict.items():
+        if not form.__contains__(k):
+            continue
+
+        field_ = form.__getitem__(k)
+
+        if v is None:
+            form.__delitem__(k)
+        else:
+            sub_form = field_.form
+            remove_exclude(sub_form, v)
+
+
+def get_exclude_as_dict(exclude):
+    ret_data = {}
+    for field_ in exclude:
+        names = field_.split('.')
+        if len(names) == 1:  # normal field
+            ret_data[names[0]] = None
+        else:
+            sub_exclude = ret_data.get(names[0])
+            if sub_exclude is None:
+                sub_exclude = {}
+
+            merge_dict(sub_exclude, get_exclude_as_dict(names[1:]))
+
+            ret_data[names[0]] = sub_exclude
+
+    return ret_data
+
+
 def get_true_argspec(method):
     """Drills through layers of decorators attempting to locate the actual argspec for the method."""
 
@@ -411,4 +408,3 @@ def get_true_argspec(method):
 
 class DecoratorCompatibilityError(Exception):
     pass
-

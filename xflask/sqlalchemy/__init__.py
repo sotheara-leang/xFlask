@@ -3,6 +3,7 @@ from sqlalchemy.orm import *
 from flask_sqlalchemy import SQLAlchemy
 
 from .decorator import *
+from .util import *
 
 
 db = SQLAlchemy(session_options={'autocommit': True})
