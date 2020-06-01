@@ -46,11 +46,15 @@ class ApiLoggingFilter(Filter):
 
         if self.matcher.test(request.path) is True:
             self._logger.debug('>>> Request')
-
             self._logger.debug('%s %s' % (request.method, request.url))
 
             if request.is_json is True:
-                self._logger.debug(request.get_json())
+                try:
+                    data = request.get_json()
+                except Exception:
+                    data = ''
+
+                self._logger.debug(data)
 
     def after(self, response):
         if self.excludes_matcher.test(request.path) is True:
