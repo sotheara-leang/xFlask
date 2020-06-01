@@ -226,10 +226,7 @@ class FlaskView(object):
                     arg_value = form
                 # form instance
                 elif isinstance(arg_annotation, Form):
-                    form = arg_annotation.__class__()
-
-                    # read data from json
-                    form = form.from_json(req_data)
+                    form = arg_annotation.from_json(req_data)
 
                     # remove excluded fields
                     exclude_as_dict = get_exclude_as_dict(arg_annotation.exclude)

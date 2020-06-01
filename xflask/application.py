@@ -158,7 +158,7 @@ class Application(object):
                 self.logger.error('!!! Failed to find blueprint module in package: %s', package, e)
 
     def _register_models(self):
-        import_modules(get_root_dir(), self.conf.get('MODEL_PKG'))
+        import_modules(get_root_dir(), self.conf.get('MODEL_PKG') or [])
 
     def get_component(self, clazz):
         return self.flask_injector.injector.get(clazz)
