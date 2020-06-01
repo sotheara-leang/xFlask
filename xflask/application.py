@@ -11,14 +11,14 @@ from werkzeug.utils import find_modules, import_string
 
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
-from xflask.common.util import get_root_dir, get_file_path, get_xflask_path
+from xflask.common.util import get_root_dir, get_file_path, get_xflask_path, import_modules
 from xflask.component import Component
 from xflask.web.controller import Controller
 from xflask.web.error_handler import SimpleErrorHandler
 from xflask.web.filter import Filter
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.security.jwt_auth_manager import JwtAuthManager
-from xflask.web.serializer import EnumSerializer, DateTimeSerializer
+from xflask.web.serializer import EnumSerializer, DateTimeSerializer, ModelSerializer
 
 
 class Application(object):
@@ -29,7 +29,7 @@ class Application(object):
     DEF_ERROR_HANDLER = SimpleErrorHandler()
     DEF_AUTH_MANAGER = JwtAuthManager()
 
-    DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer()]
+    DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer(), ModelSerializer()]
 
     def __init__(self, db, conf_file=None, filters=None, error_handler=None, auth_manager=None, json_serializers=[]):
 
@@ -65,6 +65,8 @@ class Application(object):
 
     def init(self):
         self._init_error_handler()
+
+        self._register_models()
 
         self._register_components()
 
@@ -154,6 +156,9 @@ class Application(object):
                             self.logger.error('!!! Failed to register blueprint: ', e)
             except Exception as e:
                 self.logger.error('!!! Failed to find blueprint module in package: %s', package, e)
+
+    def _register_models(self):
+        import_modules(get_root_dir(), self.conf.get('MODEL_PKG'))
 
     def get_component(self, clazz):
         return self.flask_injector.injector.get(clazz)
