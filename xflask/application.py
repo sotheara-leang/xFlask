@@ -172,7 +172,7 @@ class Application(object):
 
     def _init_models(self):
         # TODO: nested packages
-        import_modules(get_root_dir(), self.conf.get('MODEL_PKG') or [])
+        import_modules(get_root_dir(), self.conf.get('MODEL') or [])
 
     def _init_components(self):
 

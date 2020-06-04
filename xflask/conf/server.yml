@@ -17,13 +17,13 @@ TEMPLATE_DIR: webapp/view
 MODEL:
     - main.model
 
-CONTROLLER:
-    - main.web.controller.mvc
-    - main.web.controller.rest
-
 COMPONENT:
     - main.dao
     - main.service
+
+CONTROLLER:
+    - main.web.controller.mvc
+    - main.web.controller.rest
 
 LOGGING: true
 LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml

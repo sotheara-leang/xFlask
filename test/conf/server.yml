@@ -5,6 +5,18 @@ PORT: 8000
 DEBUG: true
 ENV: development
 
+MODEL:
+    - main.model
+
+CONTROLLER:
+    - main.web.controller.mvc
+    - main.web.controller.rest
+
+COMPONENT:
+    - main.dao
+    - main.service
+
+
 LOGGING: true
 
 ### SQLALCHEMY ###
