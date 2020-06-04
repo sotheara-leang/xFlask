@@ -48,20 +48,20 @@ class CrudService(Service):
     def delete_all(self):
         self.dao.delete_all()
 
-    def _begin(self, subtransactions=True, nested=False):
+    def begin(self, subtransactions=True, nested=False):
         self.dao.begin(subtransactions=subtransactions, nested=nested)
 
-    def _begin_nested(self):
+    def begin_nested(self):
         self.dao.begin_nested()
 
-    def _flush(self, objs):
+    def flush(self, objs):
         self.dao.flush(objs)
 
-    def _merge(self, obj):
+    def merge(self, obj):
         return self.dao.merge(obj)
 
-    def _commit(self):
+    def commit(self):
         self.dao.commit()
 
-    def _rollback(self):
+    def rollback(self):
         self.dao.rollback()
