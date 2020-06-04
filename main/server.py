@@ -1,11 +1,12 @@
+from main.context import AppContextInitializer
 from xflask.application import Application
-from xflask.web.filter import ApiLoggingFilter
 from xflask.sqlalchemy import db
+from xflask.web.filter import ApiLoggingFilter
 
-from main import *
+application = Application(db)
+application.set_filters([ApiLoggingFilter])
+application.set_listeners([AppContextInitializer])
 
-
-application = Application(db, filters=[ApiLoggingFilter()])
 application.init()
 
 if __name__ == '__main__':

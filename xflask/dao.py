@@ -55,7 +55,7 @@ class Dao(Component):
             self.query().filter_by(**criterion).delete()
         elif obj is not None:
             if isinstance(obj, (int, float)) or isinstance(obj, tuple):
-                self.query().filter_by(**self._get_pk_criterion_by_object(obj)).delete()
+                self.query().filter_by(**self._get_pk_criterion(obj)).delete()
             else:
                 session.delete(obj)
 
