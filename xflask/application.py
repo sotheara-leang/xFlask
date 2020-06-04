@@ -19,29 +19,40 @@ from xflask.web.controller import Controller
 from xflask.web.error_handler import BasicErrorHandler
 from xflask.web.error_handler import ErrorHandler
 from xflask.web.filter import Filter
+from xflask.web.security.auth_manager import AuthManager
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.security.jwt_auth_manager import JwtAuthManager
 
 
 class Application(object):
     DEF_CONF_FILE = 'conf/server.yml'
+
     DEF_LOG_FILE = 'conf/logging.yml'
+
+    DEF_FILTERS = [JwtAuthFilter]
+
+    DER_AUTH_MANAGER = JwtAuthManager
+
+    DEF_ERROR_HANDLER = BasicErrorHandler
+
+    DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer(), ModelSerializer()]
 
     def __init__(self, db, conf_file=None):
         self.db = db
-        self.conf_file = conf_file or get_file_path('main/conf/server.yml')
 
-        self.components = []
+        self.conf_file = conf_file or get_file_path('main/conf/server.yml')
 
         self.listeners = []
 
-        self.error_handler = BasicErrorHandler
+        self.components = []
 
-        self.auth_manager = JwtAuthManager
+        self.error_handler = self.DEF_ERROR_HANDLER
 
-        self.filters = [JwtAuthFilter]
+        self.filters = self.DEF_FILTERS
 
-        self.json_serializers = [EnumSerializer(), DateTimeSerializer(), ModelSerializer()]
+        self.auth_manager = self.DER_AUTH_MANAGER
+
+        self.json_serializers = self.DEF_JSON_SERIALIZERS
 
         self._pre_init()
 
@@ -68,7 +79,8 @@ class Application(object):
     #### GETTER ####
 
     def get_component(self, clazz):
-        return self.flask_injector.injector.get(clazz)
+        component = self.flask_injector.injector.get(clazz)
+        return None if type(component) == type else component
 
     #### RUN APP ####
 
@@ -172,7 +184,17 @@ class Application(object):
             if self.conf.exist('SQLALCHEMY_DATABASE_URI'):
                 binder.bind(SQLAlchemy, to=self.db, scope=singleton)
 
-            # scan component
+            # components (registered manually)
+            for obj in self.components:
+                if issubclass(obj, Component):
+
+                    if issubclass(obj, ApplicationStateListener):
+                        self.listeners.append(obj)
+
+                    scope = singleton if obj.scope == 'singleton' else request
+                    binder.bind(obj, obj, scope)
+
+        def configure_scan(binder):
             for package in self.conf.get('COMPONENT'):
                 try:
                     self._logger.debug('>>> Scan modules in %s', package)
@@ -218,17 +240,7 @@ class Application(object):
                 except Exception:
                     self._logger.debug('!!! No modules founded in %s', package)
 
-            # manual component
-            for obj in self.components:
-                if issubclass(obj, Component):
-
-                    if issubclass(obj, ApplicationStateListener):
-                        self.listeners.append(obj)
-
-                    scope = singleton if obj.scope == 'singleton' else request
-                    binder.bind(obj, obj, scope)
-
-        self.flask_injector = FlaskInjector(app=self.app, modules=[configure])
+        self.flask_injector = FlaskInjector(app=self.app, modules=[configure, configure_scan])
 
     def _init_controllers(self):
         for package in self.conf.get('CONTROLLER'):
@@ -283,8 +295,11 @@ class Application(object):
 
     def _init_error_handler(self):
         error_handler = self.error_handler
-        if type(self.error_handler) == type:
-            error_handler = error_handler()
+        if type(error_handler) == type and issubclass(error_handler, ErrorHandler):
+            error_handler_ = self.get_component(error_handler)
+            error_handler = error_handler() if error_handler_ is None else error_handler_
+
+            self.error_handler = error_handler
 
         if isinstance(error_handler, ErrorHandler):
             error_handler.init(self)
@@ -293,8 +308,11 @@ class Application(object):
 
     def _init_filters(self):
         for idx, filter_ in enumerate(self.filters):
-            if type(filter_) == type:
-                filter_ = filter_()
+            if type(filter_) == type and issubclass(filter_, Filter):
+                filter__ = self.get_component(filter_)
+                filter_ = filter_() if filter__ is None else filter__
+
+                self.filters[idx] = filter_
 
             if isinstance(filter_, Filter):
                 filter_.init(self)
@@ -309,23 +327,29 @@ class Application(object):
             return
 
         auth_manager = self.auth_manager
-        if type(self.auth_manager) == type:
-            auth_manager = auth_manager()
+        if type(auth_manager) == type and issubclass(auth_manager, AuthManager):
+            auth_manager_ = self.get_component(auth_manager)
+            auth_manager = auth_manager() if auth_manager_ is None else auth_manager_
+
+            self.auth_manager = auth_manager
 
         auth_manager.init(self)
 
     def _on_start(self):
         with self.app.app_context():
-            for listener in self.listeners:
-                if type(listener) == type:
-                    listener = self.get_component(listener)
+            for idx, listener in enumerate(self.listeners):
+                if type(listener) == type and issubclass(listener, ApplicationStateListener):
+                    listener_ = self.get_component(listener)
+                    listener = listener() if listener_ is None else listener_
 
-                listener.on_start(self)
+                    self.listeners[idx] = listener
+
+                if isinstance(listener, ApplicationStateListener):
+                    listener.on_start(self)
+                else:
+                    self._logger.debug('!!! Invalid application state listener: %s', listener.__name__)
 
     def _on_stop(self):
         with self.app.app_context():
             for listener in self.listeners:
-                if type(listener) == type:
-                    listener = self.get_component(listener)
-
                 listener.on_stop(self)
