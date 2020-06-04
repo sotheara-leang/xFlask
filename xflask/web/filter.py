@@ -46,7 +46,7 @@ class ApiLoggingFilter(Filter):
 
         if self.matcher.test(request.path) is True:
             self.logger.debug('>>> Request')
-            self.logger.debug('%s %s\n' % (request.method, request.url))
+            self.logger.debug('%s %s' % (request.method, request.url))
 
             if request.is_json is True:
                 try:

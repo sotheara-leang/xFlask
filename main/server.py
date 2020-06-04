@@ -3,7 +3,7 @@ from xflask.application import Application
 from xflask.sqlalchemy import db
 from xflask.web.filter import ApiLoggingFilter
 
-application = Application(db)
+application = Application(db, conf_files=['main/conf/server.yml', 'main/conf/setting.yml'])
 application.set_filters([ApiLoggingFilter])
 application.set_listeners([AppContextInitializer])
 

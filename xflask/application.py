@@ -37,10 +37,10 @@ class Application(object):
 
     DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer(), ModelSerializer()]
 
-    def __init__(self, db, conf_file=None):
+    def __init__(self, db, conf_files=None):
         self.db = db
 
-        self.conf_file = conf_file or get_file_path('main/conf/server.yml')
+        self.conf_files = conf_files or [get_file_path('main/conf/server.yml')]
 
         self.listeners = []
 
@@ -111,8 +111,8 @@ class Application(object):
 
     def _init_config(self):
         self.conf = Configuration(get_xflask_path(self.DEF_CONF_FILE))
-        if self.conf_file is not None:
-            self.conf.merge(self.conf_file)
+        for conf_file in self.conf_files:
+            self.conf.merge(conf_file)
 
     def _init_logging(self):
         if self.conf.get('LOGGING') is False:
