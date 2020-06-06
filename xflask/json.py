@@ -1,4 +1,5 @@
 from datetime import datetime
+import decimal
 
 from xflask.sqlalchemy.model import Model
 from xflask.type.enum import Enum
@@ -34,6 +35,16 @@ class DateTimeSerializer(JsonSerializer):
         return obj.strftime(self.fmt)
 
 
+class DecimalSerializer(JsonSerializer):
+
+    def check(self, obj):
+        return isinstance(obj, decimal.Decimal)
+
+    def serialize(self, obj):
+        decimal_as_str = str(obj)
+        return float(decimal_as_str)
+
+
 class ModelSerializer(JsonSerializer):
 
     def check(self, obj):
@@ -41,3 +52,11 @@ class ModelSerializer(JsonSerializer):
 
     def serialize(self, obj):
         return obj.to_dict()
+
+
+JSON_SERIALIZERS = [
+    EnumSerializer(),
+    DateTimeSerializer(),
+    DecimalSerializer(),
+    ModelSerializer()
+]

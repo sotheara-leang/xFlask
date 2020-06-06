@@ -14,7 +14,7 @@ from xflask.common.logger import Logger
 from xflask.common.util import get_root_dir, get_file_path, get_xflask_path, import_modules
 from xflask.component import Component
 from xflask.context import ApplicationStateListener
-from xflask.json import EnumSerializer, DateTimeSerializer, ModelSerializer
+from xflask.json import JSON_SERIALIZERS
 from xflask.web.controller import Controller
 from xflask.web.error_handler import BasicErrorHandler
 from xflask.web.error_handler import ErrorHandler
@@ -35,8 +35,6 @@ class Application(object):
 
     DEF_ERROR_HANDLER = BasicErrorHandler
 
-    DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer(), ModelSerializer()]
-
     def __init__(self, db, conf_files=None):
         self.db = db
 
@@ -52,7 +50,7 @@ class Application(object):
 
         self.auth_manager = self.DER_AUTH_MANAGER
 
-        self.json_serializers = self.DEF_JSON_SERIALIZERS
+        self.json_serializers = []
 
         self._pre_init()
 
@@ -67,11 +65,11 @@ class Application(object):
     def set_listeners(self, listeners=[]):
         self.listeners = listeners
 
-    def set_json_serializers(self, serializers=[]):
-        self.json_serializers = serializers
-
     def set_auth_manager(self, auth_manager):
         self.auth_manager = auth_manager
+
+    def register_json_serializer(self, serializer):
+        self.json_serializers.append(serializer)
 
     def register_component(self, component):
         self.components.append(component)
@@ -136,7 +134,9 @@ class Application(object):
         self.app.config.from_mapping(self.conf.cfg)
 
         # json encoder
-        json_serializers = self.json_serializers
+        json_serializers = []
+        json_serializers += JSON_SERIALIZERS
+        json_serializers += self.json_serializers
 
         class _JsonEncoder(JSONEncoder):
 
