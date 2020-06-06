@@ -13,40 +13,86 @@ from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
 from xflask.common.util import get_root_dir, get_file_path, get_xflask_path, import_modules
 from xflask.component import Component
+from xflask.context import ApplicationStateListener
+from xflask.json import EnumSerializer, DateTimeSerializer, ModelSerializer
 from xflask.web.controller import Controller
-from xflask.web.error_handler import SimpleErrorHandler
+from xflask.web.error_handler import BasicErrorHandler
+from xflask.web.error_handler import ErrorHandler
 from xflask.web.filter import Filter
+from xflask.web.security.auth_manager import AuthManager
 from xflask.web.security.jwt_auth_filter import JwtAuthFilter
 from xflask.web.security.jwt_auth_manager import JwtAuthManager
-from xflask.web.serializer import EnumSerializer, DateTimeSerializer, ModelSerializer
 
 
 class Application(object):
     DEF_CONF_FILE = 'conf/server.yml'
+
     DEF_LOG_FILE = 'conf/logging.yml'
 
-    DEF_FILTERS = [JwtAuthFilter()]
-    DEF_ERROR_HANDLER = SimpleErrorHandler()
-    DEF_AUTH_MANAGER = JwtAuthManager()
+    DEF_FILTERS = [JwtAuthFilter]
+
+    DER_AUTH_MANAGER = JwtAuthManager
+
+    DEF_ERROR_HANDLER = BasicErrorHandler
 
     DEF_JSON_SERIALIZERS = [EnumSerializer(), DateTimeSerializer(), ModelSerializer()]
 
-    def __init__(self, db, conf_file=None, filters=None, error_handler=None, auth_manager=None, json_serializers=[]):
-
+    def __init__(self, db, conf_files=None):
         self.db = db
-        self.conf_file = conf_file or get_file_path('main/conf/server.yml')
 
-        self.filters = filters or self.DEF_AUTH_MANAGER
-        self.error_handler = error_handler or self.DEF_ERROR_HANDLER
-        self.auth_manager = auth_manager or self.DEF_AUTH_MANAGER
-        self.json_serializers = json_serializers + self.DEF_JSON_SERIALIZERS
+        self.conf_files = conf_files or [get_file_path('main/conf/server.yml')]
+
+        self.listeners = []
+
+        self.components = []
+
+        self.error_handler = self.DEF_ERROR_HANDLER
+
+        self.filters = self.DEF_FILTERS
+
+        self.auth_manager = self.DER_AUTH_MANAGER
+
+        self.json_serializers = self.DEF_JSON_SERIALIZERS
 
         self._pre_init()
+
+    #### SETTER ####
+
+    def set_filters(self, filters=[]):
+        self.filters = filters
+
+    def set_error_handler(self, error_handler):
+        self.error_handler = error_handler
+
+    def set_listeners(self, listeners=[]):
+        self.listeners = listeners
+
+    def set_json_serializers(self, serializers=[]):
+        self.json_serializers = serializers
+
+    def set_auth_manager(self, auth_manager):
+        self.auth_manager = auth_manager
+
+    def register_component(self, component):
+        self.components.append(component)
+
+    #### GETTER ####
+
+    def get_component(self, clazz):
+        component = self.flask_injector.injector.get(clazz)
+        return None if type(component) == type else component
+
+    #### RUN APP ####
 
     def run(self, host=None, port=None):
         host = host or self.conf.get('HOST')
         port = port or self.conf.get('PORT')
+
         self.app.run(host, port, use_reloader=False)
+
+        self._on_stop()
+
+    #### PRE INIT ####
 
     def _pre_init(self):
         self._init_config()
@@ -57,43 +103,28 @@ class Application(object):
 
         self._init_db()
 
-        # register xflask extension
+        # register XFlask extension
         if not hasattr(self.app, 'extensions'):
             self.app.extensions = {}
 
         self.app.extensions['xflask'] = self
 
-    def init(self):
-        self._init_error_handler()
-
-        self._register_models()
-
-        self._register_components()
-
-        self._register_controllers()
-
-        self._register_blueprints()
-
-        self._register_filters()
-
-        self._init_auth_manager()
-
     def _init_config(self):
         self.conf = Configuration(get_xflask_path(self.DEF_CONF_FILE))
-        if self.conf_file is not None:
-            self.conf.merge(self.conf_file)
+        for conf_file in self.conf_files:
+            self.conf.merge(conf_file)
 
     def _init_logging(self):
         if self.conf.get('LOGGING') is False:
             logging.basicConfig(level=logging.DEBUG)
         else:
-            self.logger = Logger(get_xflask_path(self.DEF_LOG_FILE))
+            self._logger = Logger(get_xflask_path(self.DEF_LOG_FILE))
 
             log_file = self.conf.get('LOGGING_CONF_FILE')
             if log_file is not None:
-                self.logger.merge(log_file)
+                self._logger.merge(log_file)
 
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     def _init_app(self):
         self.app = Flask(self.conf.get('APP_NAME'),
@@ -122,48 +153,28 @@ class Application(object):
         if self.conf.exist('SQLALCHEMY_DATABASE_URI'):
             self.db.init_app(self.app)
 
-    def _init_auth_manager(self):
-        if self.auth_manager is None:
-            return
+    #### INIT ####
 
-        self.auth_manager.init(self)
+    def init(self):
+        self._init_models()
 
-    def _init_error_handler(self):
-        self.error_handler.init(self)
+        self._init_components()
 
-    def _register_filters(self):
-        for filter_ in self.filters:
-            if isinstance(filter_, Filter):
-                filter_.init(self)
-                self.app.before_request(filter_.before)
-                self.app.after_request(filter_.after)
-            else:
-                self.logger.debug('!!! Invalid filter: %s', filter_.__name__)
+        self._init_controllers()
 
-    def _register_blueprints(self):
-        for package in self.conf.get('BLUEPRINT_PKG'):
-            try:
-                for name in find_modules(package):
-                    try:
-                        module = import_string(name)
-                        if hasattr(module, 'Blueprint'):
-                            self.app.register_blueprint(module.bp)
-                        else:
-                            del module
+        self._init_error_handler()
 
-                    except Exception as e:
-                        if not isinstance(e, AttributeError):
-                            self.logger.error('!!! Failed to register blueprint: ', e)
-            except Exception as e:
-                self.logger.error('!!! Failed to find blueprint module in package: %s', package, e)
+        self._init_filters()
 
-    def _register_models(self):
-        import_modules(get_root_dir(), self.conf.get('MODEL_PKG'))
+        self._init_auth_manager()
 
-    def get_component(self, clazz):
-        return self.flask_injector.injector.get(clazz)
+        self._on_start()
 
-    def _register_components(self):
+    def _init_models(self):
+        # TODO: nested packages
+        import_modules(get_root_dir(), self.conf.get('MODEL') or [])
+
+    def _init_components(self):
 
         def configure(binder):
             # config
@@ -173,11 +184,22 @@ class Application(object):
             if self.conf.exist('SQLALCHEMY_DATABASE_URI'):
                 binder.bind(SQLAlchemy, to=self.db, scope=singleton)
 
-            # component
-            for package in self.conf.get('COMPONENT_PKG'):
-                try:
-                    self.logger.debug('>>> Scan modules in %s', package)
+            # components (registered manually)
+            for obj in self.components:
+                if issubclass(obj, Component):
 
+                    if issubclass(obj, ApplicationStateListener):
+                        self.listeners.append(obj)
+
+                    scope = singleton if obj.scope == 'singleton' else request
+                    binder.bind(obj, obj, scope)
+
+        def configure_scan(binder):
+            for package in self.conf.get('COMPONENT'):
+                try:
+                    self._logger.debug('>>> Scan modules in %s', package)
+
+                    # TODO: nested packages
                     for pkg_name in find_modules(package):
                         try:
                             module = import_string(pkg_name)
@@ -188,6 +210,12 @@ class Application(object):
                             for class_name in class_names:
                                 obj = getattr(module, class_name)
 
+                                if issubclass(obj, Controller):
+                                    continue
+
+                                if issubclass(obj, ApplicationStateListener):
+                                    self._component_listeners.append(obj)
+
                                 if issubclass(obj, Component):
                                     if obj.abstract is True:
                                         continue
@@ -197,28 +225,29 @@ class Application(object):
                                     scope = singleton if obj.scope == 'singleton' else request
                                     binder.bind(obj, obj, scope)
 
-                                    self.logger.debug('Register component: %s', class_name)
+                                    self._logger.debug('Register component: %s', class_name)
                                 else:
                                     del module
-                                    self.logger.debug('!!! Invalid component: %s', class_name)
+                                    self._logger.debug('!!! Invalid component: %s', class_name)
 
                             if not valid_module:
                                 del module
 
                         except Exception as e:
-                            self.logger.exception('!!! Failed to initialize component in %s', pkg_name, e)
+                            self._logger.exception('!!! Failed to initialize component in %s', pkg_name, e)
                             sys.exit()
 
                 except Exception:
-                    self.logger.debug('!!! No modules founded in %s', package)
+                    self._logger.debug('!!! No modules founded in %s', package)
 
-        self.flask_injector = FlaskInjector(app=self.app, modules=[configure])
+        self.flask_injector = FlaskInjector(app=self.app, modules=[configure, configure_scan])
 
-    def _register_controllers(self):
-        for package in self.conf.get('CONTROLLER_PKG'):
+    def _init_controllers(self):
+        for package in self.conf.get('CONTROLLER'):
             try:
-                self.logger.debug('>>> Scan modules in %s', package)
+                self._logger.debug('>>> Scan modules in %s', package)
 
+                # TODO: nested packages
                 for module_ns in find_modules(package):
                     try:
                         module = import_string(module_ns)
@@ -238,28 +267,89 @@ class Application(object):
                                 try:
                                     controller.register(self.app, self.flask_injector.injector)
                                 except Exception:
-                                    self.logger.exception('Failed to initialize controller: %s', class_name)
+                                    self._logger.exception('Failed to initialize controller: %s', class_name)
                                     sys.exit()
 
-                                self.logger.debug('Register controller: %s', class_name)
+                                self._logger.debug('Register controller: %s', class_name)
                             else:
-                                self.logger.debug('!!! Invalid controller: %s', class_name)
+                                self._logger.debug('!!! Invalid controller: %s', class_name)
 
                         if not valid_module:
                             del module
 
                     except Exception as e:
-                        self.logger.exception('!!! Failed to initialize controller in %s', module_ns, e)
+                        self._logger.exception('!!! Failed to initialize controller in %s', module_ns, e)
                         sys.exit()
 
             except Exception:
-                self.logger.debug('!!! No modules found in %s', package)
+                self._logger.debug('!!! No modules found in %s', package)
 
         # display registered routes
-        self.logger.debug('>>> Registered routes:')
+        self._logger.debug('>>> Registered routes:')
 
         routes = self.app.url_map._rules
         if routes is not None and len(routes) > 0:
             max_len = max([len(route.rule) for route in routes])
             for route in routes:
-                self.logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)
+                self._logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)
+
+    def _init_error_handler(self):
+        error_handler = self.error_handler
+        if type(error_handler) == type and issubclass(error_handler, ErrorHandler):
+            error_handler_ = self.get_component(error_handler)
+            error_handler = error_handler() if error_handler_ is None else error_handler_
+
+            self.error_handler = error_handler
+
+        if isinstance(error_handler, ErrorHandler):
+            error_handler.init(self)
+        else:
+            self._logger.debug('!!! Invalid error handler: %s', error_handler.__name__)
+
+    def _init_filters(self):
+        for idx, filter_ in enumerate(self.filters):
+            if type(filter_) == type and issubclass(filter_, Filter):
+                filter__ = self.get_component(filter_)
+                filter_ = filter_() if filter__ is None else filter__
+
+                self.filters[idx] = filter_
+
+            if isinstance(filter_, Filter):
+                filter_.init(self)
+
+                self.app.before_request(filter_.before)
+                self.app.after_request(filter_.after)
+            else:
+                self._logger.debug('!!! Invalid filter: %s', filter_.__name__)
+
+    def _init_auth_manager(self):
+        if self.auth_manager is None:
+            return
+
+        auth_manager = self.auth_manager
+        if type(auth_manager) == type and issubclass(auth_manager, AuthManager):
+            auth_manager_ = self.get_component(auth_manager)
+            auth_manager = auth_manager() if auth_manager_ is None else auth_manager_
+
+            self.auth_manager = auth_manager
+
+        auth_manager.init(self)
+
+    def _on_start(self):
+        with self.app.app_context():
+            for idx, listener in enumerate(self.listeners):
+                if type(listener) == type and issubclass(listener, ApplicationStateListener):
+                    listener_ = self.get_component(listener)
+                    listener = listener() if listener_ is None else listener_
+
+                    self.listeners[idx] = listener
+
+                if isinstance(listener, ApplicationStateListener):
+                    listener.on_start(self)
+                else:
+                    self._logger.debug('!!! Invalid application state listener: %s', listener.__name__)
+
+    def _on_stop(self):
+        with self.app.app_context():
+            for listener in self.listeners:
+                listener.on_stop(self)

@@ -18,6 +18,9 @@ class Filter(object):
 
 class ApiLoggingFilter(Filter):
 
+    def init(self, application):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
     def __init__(self, routes=None, excludes=None):
         self.routes = routes or ['/api/<path:route>']
         self.excludes = excludes or ['/api/login']
@@ -34,9 +37,6 @@ class ApiLoggingFilter(Filter):
 
         self.excludes_matcher = Map(rules).bind('', '/')
 
-    def init(self, application):
-        self._logger = logging.getLogger(self.__class__.__name__)
-
     def before(self):
         if self.routes is None or len(self.routes) == 0:
             return
@@ -45,19 +45,23 @@ class ApiLoggingFilter(Filter):
             return
 
         if self.matcher.test(request.path) is True:
-            self._logger.debug('>>> Request')
-
-            self._logger.debug('%s %s' % (request.method, request.url))
+            self.logger.debug('>>> Request')
+            self.logger.debug('%s %s' % (request.method, request.url))
 
             if request.is_json is True:
-                self._logger.debug(request.get_json())
+                try:
+                    data = request.get_json()
+                except Exception:
+                    data = ''
+
+                self.logger.debug(data)
 
     def after(self, response):
         if self.excludes_matcher.test(request.path) is True:
             return response
 
         if response.is_json is True:
-            self._logger.debug('<<< Response')
-            self._logger.debug(response.get_json())
+            self.logger.debug('<<< Response')
+            self.logger.debug(response.get_json())
 
         return response

@@ -25,7 +25,7 @@ class ErrorHandler(object):
         pass
 
 
-class SimpleErrorHandler(ErrorHandler):
+class BasicErrorHandler(ErrorHandler):
     DEF_API_ROUTE = '/api'
     DEF_TEMPLATE_FOLDER = ''
 

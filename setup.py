@@ -25,7 +25,7 @@ setup(
     name='xFlask',
     packages=find_packages(),
     package_data={'xflask': ['conf/*']},
-    version='0.1.6',
+    version='0.2.0',
     description='Python Web Framework',
     long_description=readme(),
     long_description_content_type='text/markdown',

@@ -1,4 +1,7 @@
 import collections
+import enum
+
+from xflask.type.enum import Enum
 
 
 def get_attr(obj, attr_name):
@@ -6,7 +9,7 @@ def get_attr(obj, attr_name):
 
 
 def to_dict(obj):
-    if not hasattr(obj, '__dict__'):
+    if not hasattr(obj, '__dict__') or isinstance(obj, Enum) or isinstance(obj, enum.Enum):
         return obj
 
     if hasattr(obj, 'to_dict'):

@@ -7,24 +7,23 @@ PORT: 8000
 DEBUG: true
 ENV: development
 
-MODEL_PKG:
-  - main.model
-
-COMPONENT_PKG:
-  - main.dao
-  - main.service
-
-CONTROLLER_PKG:
-  - main.web.controller.mvc
-  - main.web.controller.rest
-
-BLUEPRINT_PKG: []
-
 SECRET_KEY: AAAAAA
 
 STATIC_DIR: webapp/public
 
 TEMPLATE_DIR: webapp/view
+
+### XFLASK ###
+MODEL:
+    - main.model
+
+COMPONENT:
+    - main.dao
+    - main.service
+
+CONTROLLER:
+    - main.web.controller.mvc
+    - main.web.controller.rest
 
 LOGGING: true
 LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml

@@ -1,6 +1,6 @@
 from flask_jwt_extended import JWTManager, get_jwt_identity, unset_jwt_cookies
 
-from .auth_manager import AuthManager
+from xflask.web.security.auth_manager import AuthManager
 
 
 class JwtAuthManager(AuthManager):
