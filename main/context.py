@@ -1,6 +1,7 @@
+from xflask.component import Component
 from xflask.context import ApplicationStateListener
 
-class AppContextInitializer(ApplicationStateListener):
+class AppContextInitializer(Component, ApplicationStateListener):
 
     def on_start(self, application):
         pass

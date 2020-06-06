@@ -5,7 +5,7 @@ from xflask.web.filter import ApiLoggingFilter
 
 application = Application(db, conf_files=['main/conf/server.yml', 'main/conf/setting.yml'])
 application.set_filters([ApiLoggingFilter])
-application.set_listeners([AppContextInitializer])
+application.register_component(AppContextInitializer)
 
 application.init()
 
