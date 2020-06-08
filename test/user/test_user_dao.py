@@ -31,8 +31,17 @@ class TestUserDao(TestCase):
         self.user_dao.insert(user)
 
     def test_get(self):
-        user = self.user_dao.get(9)
-        print('\n', user)
+        user = self.user_dao.get(72)
+
+        role = user.role
+
+        dict_ = user.to_dict()
+
+        user2 = User()
+
+        user2.from_dict(**dict_)
+
+        print(user2)
 
     def test_get_all(self):
         users = self.user_dao.get_all()

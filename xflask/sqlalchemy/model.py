@@ -151,6 +151,68 @@ class Model(db.Model):
     def from_dict(self, **kwargs):
         """Update this model with a dictionary."""
 
+        readonly = self._readonly_columns if hasattr(self, '_readonly_columns') else []
+        if hasattr(self, '_hidden_columns'):
+            readonly += self._hidden_columns
+
+        readonly += self._get_readonly_columns()
+
+        #### columns ####
+
+        columns = self.__table__.columns.keys()
+        for key in columns:
+            if key.startswith('_'):
+                continue
+
+            allowed = True if key not in readonly else False
+            exists = True if key in kwargs else False
+            if allowed and exists:
+                setattr(self, key, kwargs[key])
+
+        #### relationships ####
+
+        relationships = self.__mapper__.relationships.keys()
+        for rel in relationships:
+            if rel.startswith('_'):
+                continue
+
+            allowed = True if rel not in readonly else False
+            exists = True if rel in kwargs else False
+            if allowed and exists:
+                is_list = self.__mapper__.relationships[rel].uselist
+                if is_list:
+                    cls = self.__mapper__.relationships[rel].argument()
+
+                    obj_list = []
+                    for item in kwargs[rel]:
+                        obj = cls()
+                        obj.from_dict(**item)
+                        obj_list.append(obj)
+
+                    setattr(self, rel, obj_list)
+                else:
+                    cls = self.__mapper__.relationships[rel].argument._identity_class
+
+                    obj = cls()
+                    obj.from_dict(**kwargs[rel])
+
+                    setattr(self, rel, obj)
+
+        #### properties ####
+
+        properties = dir(self)
+        for key in list(set(properties) - set(columns) - set(relationships)):
+            if key.startswith('_'):
+                continue
+
+            allowed = True if key not in readonly else False
+            exists = True if key in kwargs else False
+            if allowed and exists:
+                setattr(self, key, kwargs[key])
+
+    def from_dict_with_merge_state(self, **kwargs):
+        """Update this state model with a dictionary."""
+
         _force = kwargs.pop("_force", False)
 
         readonly = self._readonly_columns if hasattr(self, '_readonly_columns') else []
@@ -179,7 +241,7 @@ class Model(db.Model):
 
         relationships = self.__mapper__.relationships.keys()
         for rel in relationships:
-            if key.startswith('_'):
+            if rel.startswith('_'):
                 continue
             allowed = True if _force or rel not in readonly else False
             exists = True if rel in kwargs else False
@@ -263,7 +325,7 @@ class AuditModel(Model):
 
     @staticmethod
     def _get_readonly_columns():
-        return super()._get_readonly_columns() + ['modified_at', 'created_at', 'modified_by', 'created_by']
+        return ['id', 'modified_at', 'created_at', 'modified_by', 'created_by']
 
     @declared_attr
     def created_by(self):
@@ -297,14 +359,14 @@ class SoftModel(AuditModel):
     deleted_at = db.Column(db.DateTime)
 
     @staticmethod
-    def _get_readonly_columns(self):
-        return super()._get_readonly_columns() + ['deleted_at', 'deleted_by']
+    def _get_readonly_columns():
+        return ['id', 'modified_at', 'created_at', 'modified_by', 'created_by', 'deleted_at', 'deleted_by']
 
     @declared_attr
     def deleted_by(self):
         return db.Column(db.Integer)
 
-    def init_soft_columns(self):
+    def set_soft_columns(self):
         self.deleted_at = datetime.now()
         self.deleted_by = _current_user_id_or_none()
 

@@ -16,6 +16,9 @@ COMPONENT:
     - main.dao
     - main.service
 
+JWT_SECRET_KEY: BBBBBB
+JWT_BLACKLIST_ENABLED: true
+JWT_BLACKLIST_TOKEN_CHECKS: ['access', 'refresh']
 
 LOGGING: true
 
