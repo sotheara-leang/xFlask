@@ -31,7 +31,9 @@ class UserController(Controller):
 
     @route('page', methods=['POST'])
     def get_page(self, page_form: UserPageForm):
-        pagination = self.user_service.get_page(page_form.get_page(), page_form.get_sort(), page_form.get_criterion())
+        pagination = self.user_service.get_page_by_filter(page_form.get_page(), page_form.get_per_page(),
+                                                          page_form.get_sort(),
+                                                          page_form.get_filter())
         page = Page.from_pagination(pagination)
 
         return Response.success(page)

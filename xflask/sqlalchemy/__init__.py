@@ -8,8 +8,6 @@ from .util import *
 
 db = SQLAlchemy(session_options={'autocommit': True})
 
-session = db.session
-
 
 def transactional(subtransactions=True, nested=False):
     def function(f):
