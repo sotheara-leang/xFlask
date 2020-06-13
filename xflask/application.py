@@ -21,18 +21,12 @@ from xflask.web.error_handler import BasicErrorHandler
 from xflask.web.error_handler import ErrorHandler
 from xflask.web.filter import Filter
 from xflask.web.security.auth_manager import AuthManager
-from xflask.web.security.jwt_auth_filter import JwtAuthFilter
-from xflask.web.security.jwt_auth_manager import JwtAuthManager
 
 
 class Application(object):
     DEF_CONF_FILE = 'conf/server.yml'
 
     DEF_LOG_FILE = 'conf/logging.yml'
-
-    DEF_FILTERS = [JwtAuthFilter]
-
-    DER_AUTH_MANAGER = JwtAuthManager
 
     DEF_ERROR_HANDLER = BasicErrorHandler
 
@@ -49,9 +43,9 @@ class Application(object):
 
         self.error_handler = self.DEF_ERROR_HANDLER
 
-        self.filters = self.DEF_FILTERS
+        self.filters = []
 
-        self.auth_manager = self.DER_AUTH_MANAGER
+        self.auth_manager = None
 
         self.json_serializers = []
 

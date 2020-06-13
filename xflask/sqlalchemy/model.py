@@ -12,10 +12,6 @@ from xflask.web.security import get_current_user
 class Model(db.Model):
     __abstract__ = True
 
-    @staticmethod
-    def _get_readonly_columns():
-        return ['id']
-
     @classmethod
     def get_column(cls, col_name):
         return cls.__table__.columns.get(col_name)
@@ -155,8 +151,6 @@ class Model(db.Model):
         if hasattr(self, '_hidden_columns'):
             readonly += self._hidden_columns
 
-        readonly += self._get_readonly_columns()
-
         #### columns ####
 
         columns = self.__table__.columns.keys()
@@ -218,8 +212,6 @@ class Model(db.Model):
         readonly = self._readonly_columns if hasattr(self, '_readonly_columns') else []
         if hasattr(self, '_hidden_columns'):
             readonly += self._hidden_columns
-
-        readonly += self._get_readonly_columns()
 
         changes = {}
 
@@ -317,15 +309,15 @@ class Model(db.Model):
         return changes
 
 
-class AuditModel(Model):
+class TrackModel(Model):
     __abstract__ = True
 
     created_at = db.Column(db.DateTime, default=datetime.now)
     modified_at = db.Column(db.DateTime, onupdate=datetime.now)
 
-    @staticmethod
-    def _get_readonly_columns():
-        return ['id', 'modified_at', 'created_at', 'modified_by', 'created_by']
+
+class AuditModel(TrackModel):
+    __abstract__ = True
 
     @declared_attr
     def created_by(self):
@@ -335,32 +327,11 @@ class AuditModel(Model):
     def modified_by(self):
         return db.Column(db.Integer, onupdate=_current_user_id_or_none)
 
-    # @staticmethod
-    # def before_insert(mapper, connection, instance):
-    #     user = get_current_user() or {}
-    #     instance.created_at = func.now()
-    #     instance.created_by = user.get('id')
-    #
-    # @staticmethod
-    # def before_update(mapper, connection, instance):
-    #     user = get_current_user() or {}
-    #     instance.modified_at = func.now()
-    #     instance.modified_by = user.get('id')
-
-    # @classmethod
-    # def __declare_last__(cls):
-    #     db.event.listen(cls, 'before_insert', cls.before_insert)
-    #     db.event.listen(cls, 'before_update', cls.before_update)
-
 
 class SoftModel(AuditModel):
     __abstract__ = True
 
     deleted_at = db.Column(db.DateTime)
-
-    @staticmethod
-    def _get_readonly_columns():
-        return ['id', 'modified_at', 'created_at', 'modified_by', 'created_by', 'deleted_at', 'deleted_by']
 
     @declared_attr
     def deleted_by(self):
@@ -370,15 +341,8 @@ class SoftModel(AuditModel):
         self.deleted_at = datetime.now()
         self.deleted_by = _current_user_id_or_none()
 
-    # @staticmethod
-    # def before_delete(mapper, connection, instance):
-    #     user = get_current_user() or {}
-    #     instance.deleted_at = func.now()
-    #     instance.deleted_by = user.get('id')
-
-    # @classmethod
-    # def __declare_last__(cls):
-    #     db.event.listen(cls, 'before_delete', cls.before_delete)
+    def is_soft(self):
+        return self.deleted_at is not None
 
 
 def _current_user_id_or_none():
