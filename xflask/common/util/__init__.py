@@ -1,6 +1,7 @@
-import sys
-import importlib
+import glob
 import re
+import sys
+
 import yaml
 
 from xflask.common.util.file_util import *
@@ -21,15 +22,22 @@ def setup_env(root_dir_name):
 
     sys.path.append(root_dir)
 
-def import_modules(root_dir, model_pkgs):
-    for model_pkg in model_pkgs:
-        for module in os.listdir(root_dir + '/' + model_pkg.replace('.', '/')):
-            if module == '__init__.py' or module[-3:] != '.py':
-                continue
 
-            model_namespace = model_pkg + '.' + module[:-3]
+def scan_namespaces(package):
+    namespaces = []
 
-            importlib.import_module(model_namespace)
+    files_pattern = os.path.join(get_root_dir(), package.replace('.', '/'), '**/*.py')
+    for file in glob.glob(files_pattern, recursive=True):
+        file_name = os.path.basename(file)
+        if file_name.startswith('_') or 'migrate' in file_name or 'server' in file_name:
+            continue
+
+        namespace = file.replace(get_root_dir(), '').replace('/', '.')
+        namespace = namespace[1:-3]
+        namespaces.append(namespace)
+
+    return namespaces
+
 
 def load_config(conf_file):
     with open(conf_file, 'r') as f:

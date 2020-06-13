@@ -1,3 +1,4 @@
+import importlib
 import inspect
 import logging
 import sys
@@ -7,11 +8,11 @@ from flask.json import JSONEncoder
 from flask_injector import FlaskInjector, request
 from flask_sqlalchemy import SQLAlchemy
 from injector import singleton as singleton
-from werkzeug.utils import find_modules, import_string
+from werkzeug.utils import import_string
 
 from xflask.common.configuration import Configuration
 from xflask.common.logger import Logger
-from xflask.common.util import get_root_dir, get_file_path, get_xflask_path, import_modules
+from xflask.common.util import get_root_dir, get_file_path, get_xflask_path, scan_namespaces
 from xflask.component import Component
 from xflask.context import ApplicationStateListener
 from xflask.json import JSON_SERIALIZERS
@@ -43,6 +44,8 @@ class Application(object):
         self.listeners = []
 
         self.components = []
+
+        self.component_registry = dict()
 
         self.error_handler = self.DEF_ERROR_HANDLER
 
@@ -171,12 +174,22 @@ class Application(object):
         self._on_start()
 
     def _init_models(self):
-        # TODO: nested packages
-        import_modules(get_root_dir(), self.conf.get('MODEL') or [])
+        for package in self.conf.get('MODEL') or []:
+            self._logger.debug('>>> Scan models in %s', package)
+
+            namespaces = scan_namespaces(package)
+            for namespace in namespaces:
+                self._logger.debug('Register model: %s', namespace)
+
+                try:
+                    importlib.import_module(namespace)
+                except Exception as e:
+                    self._logger.exception('!!! Failed to initialize model: %s', namespace, e)
+                    sys.exit()
 
     def _init_components(self):
 
-        def configure(binder):
+        def static_module(binder):
             # config
             binder.bind(Configuration, self.conf, scope=singleton)
 
@@ -184,41 +197,39 @@ class Application(object):
             if self.conf.exist('SQLALCHEMY_DATABASE_URI'):
                 binder.bind(SQLAlchemy, to=self.db, scope=singleton)
 
-            # components (registered manually)
+            # manually registered components
             for obj in self.components:
                 if issubclass(obj, Component):
-
-                    if issubclass(obj, ApplicationStateListener):
-                        self.listeners.append(obj)
+                    self.component_registry[obj] = ''
 
                     scope = singleton if obj.scope == 'singleton' else request
                     binder.bind(obj, obj, scope)
 
-        def configure_scan(binder):
-            for package in self.conf.get('COMPONENT'):
+        def scan_module(binder):
+            for package in self.conf.get('COMPONENT') or []:
                 try:
-                    self._logger.debug('>>> Scan modules in %s', package)
+                    self._logger.debug('>>> Scan components in %s', package)
 
-                    # TODO: nested packages
-                    for pkg_name in find_modules(package):
+                    namespaces = scan_namespaces(package)
+                    for namespace in namespaces:
                         try:
-                            module = import_string(pkg_name)
+                            module = import_string(namespace)
                             class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
                                            m[1].__module__ == module.__name__]
 
                             valid_module = False
+
                             for class_name in class_names:
                                 obj = getattr(module, class_name)
 
                                 if issubclass(obj, Controller):
                                     continue
 
-                                if issubclass(obj, ApplicationStateListener):
-                                    self._component_listeners.append(obj)
-
                                 if issubclass(obj, Component):
                                     if obj.abstract is True:
                                         continue
+
+                                    self.component_registry[obj] = ''
 
                                     valid_module = True
 
@@ -226,35 +237,48 @@ class Application(object):
                                     binder.bind(obj, obj, scope)
 
                                     self._logger.debug('Register component: %s', class_name)
-                                else:
-                                    del module
-                                    self._logger.debug('!!! Invalid component: %s', class_name)
 
                             if not valid_module:
                                 del module
 
                         except Exception as e:
-                            self._logger.exception('!!! Failed to initialize component in %s', pkg_name, e)
+                            self._logger.exception('!!! Failed to initialize modules in %s', namespace, e)
                             sys.exit()
 
                 except Exception:
                     self._logger.debug('!!! No modules founded in %s', package)
 
-        self.flask_injector = FlaskInjector(app=self.app, modules=[configure, configure_scan])
+        self.flask_injector = FlaskInjector(app=self.app, modules=[static_module, scan_module])
+
+        # POST INIT
+
+        for component, _ in self.component_registry.items():
+            obj = self.get_component(component)
+
+            if isinstance(obj, ApplicationStateListener):
+                self.listeners.append(obj)
+
+            if isinstance(obj, Filter):
+                order = obj.order
+                if order is None:
+                    self.filters.append(obj)
+                else:
+                    self.filters.insert(order, obj)
 
     def _init_controllers(self):
-        for package in self.conf.get('CONTROLLER'):
+        for package in self.conf.get('CONTROLLER') or []:
             try:
-                self._logger.debug('>>> Scan modules in %s', package)
+                self._logger.debug('>>> Scan controllers in %s', package)
 
-                # TODO: nested packages
-                for module_ns in find_modules(package):
+                namespaces = scan_namespaces(package)
+                for namespace in namespaces:
                     try:
-                        module = import_string(module_ns)
+                        module = import_string(namespace)
                         class_names = [m[0] for m in inspect.getmembers(module, inspect.isclass) if
                                        m[1].__module__ == module.__name__]
 
                         valid_module = False
+
                         for class_name in class_names:
                             controller = getattr(module, class_name)
 
@@ -278,7 +302,7 @@ class Application(object):
                             del module
 
                     except Exception as e:
-                        self._logger.exception('!!! Failed to initialize controller in %s', module_ns, e)
+                        self._logger.exception('!!! Failed to initialize modules in %s', namespace, e)
                         sys.exit()
 
             except Exception:

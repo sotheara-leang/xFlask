@@ -38,13 +38,13 @@ class UserController(Controller):
 
     @route('', methods=['POST'])
     def create(self, user_form: UserForm(exclude=['id'])):
-        self.user_service.create_user(User(**user_form.data))
+        self.user_service.create(User(**user_form.data))
 
         return Response.success()
 
     @route('', methods=['PUT'])
     def update(self, user_form: UserForm):
-        self.user_service.update_user(User(**user_form.data))
+        self.user_service.user(User(**user_form.data))
 
         return Response.success()
 

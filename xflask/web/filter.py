@@ -5,6 +5,7 @@ from werkzeug.routing import Map, Rule
 
 
 class Filter(object):
+    order = None
 
     def init(self, application):
         pass

@@ -39,7 +39,7 @@ class UserService(CrudService):
         pagination = self.dao.get_page(page.page, page.per_page, tuple(sort_), **criterion_)
         return pagination
 
-    def create_user(self, obj):
+    def create(self, obj):
         username = obj.username
 
         user = self.dao.get_by_username(username)
@@ -47,9 +47,9 @@ class UserService(CrudService):
             self.logger.error('user existed: username=%s', username)
             raise Exception(SysCode.EXISTED)
 
-        self.create(obj)
+        super().create(obj)
 
-    def update_user(self, obj):
+    def update(self, obj):
         user = self.dao.get(obj.id)
         if user is None:
             self.logger.error('user not found: id=%d', obj.id)
@@ -60,9 +60,9 @@ class UserService(CrudService):
             self.logger.error('username existed: id=%d, username=%', obj.id, username)
             raise Exception(BizCode.USER_NAME_EXISTED)
 
-        self.update(obj)
+        super().update(obj)
 
-    def auth_user(self, username, password):
+    def auth(self, username, password):
         user = self.dao.get_by_username(username)
         if user is None:
             self.logger.error('user not found: username=%s', username)

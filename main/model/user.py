@@ -1,4 +1,4 @@
-from xflask.sqlalchemy import Column, ForeignKey
+from xflask.sqlalchemy import Column, ForeignKey, relationship
 from xflask.sqlalchemy import Integer, String, StringEnum
 from xflask.sqlalchemy.model import AuditModel
 
@@ -15,6 +15,7 @@ class User(AuditModel):
     edu_level   = Column(StringEnum(EducationLevel), nullable=False)
 
     role_id     = Column(Integer, ForeignKey('role.id'))
+    role        = relationship('Role', lazy=True)
 
     _hidden_columns = [
         'password'
