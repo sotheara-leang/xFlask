@@ -26,15 +26,21 @@ def setup_env(root_dir_name):
 def scan_namespaces(package):
     namespaces = []
 
-    files_pattern = os.path.join(get_root_dir(), package.replace('.', '/'), '**/*.py')
-    for file in glob.glob(files_pattern, recursive=True):
-        file_name = os.path.basename(file)
-        if file_name.startswith('_') or 'migrate' in file_name or 'server' in file_name:
-            continue
+    file_path = os.path.join(get_root_dir(), package.replace('.', '/')) + '.py'
+    if is_file(file_path):
+        # file
+        namespaces.append(package)
+    else:
+        # directory
+        files_pattern = os.path.join(get_root_dir(), package.replace('.', '/'), '**/*.py')
+        for file in glob.glob(files_pattern, recursive=True):
+            file_name = os.path.basename(file)
+            if file_name.startswith('_') or 'migrate' in file_name or 'server' in file_name:
+                continue
 
-        namespace = file.replace(get_root_dir(), '').replace('/', '.')
-        namespace = namespace[1:-3]
-        namespaces.append(namespace)
+            namespace = file.replace(get_root_dir(), '').replace('/', '.')
+            namespace = namespace[1:-3]
+            namespaces.append(namespace)
 
     return namespaces
 
