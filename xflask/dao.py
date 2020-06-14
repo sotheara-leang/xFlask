@@ -1,103 +1,106 @@
+from xflask.common.util import to_dict
 from xflask.component import Component
-from xflask.sqlalchemy import session, transactional
+from xflask.sqlalchemy import db, transactional
 
 
 class Dao(Component):
 
     def __init__(self, model):
+        self.session = db.session
         self.model = model
 
-    def count(self, **criterion):
-        return self.query().filter_by(**criterion).count()
+    def count(self):
+        return self.query().count()
 
-    def exist(self, id=None, **criterion):
-        query = self.query().filter_by(**self.get_pk_criterion(id)) \
-            if id is not None else self.query().filter_by(**criterion)
-        return query.scalar() is not None
+    def count_by_filter(self, **filter):
+        return self.query().filter_by(**filter).count()
 
-    def get(self, id=None, **criterion):
-        return self.query().filter_by(**self.get_pk_criterion(id)).first() \
-            if id is not None else self.query().filter_by(**criterion).first()
+    def exist(self, id):
+        return self.query().filter_by(**self.get_pk_filter(id)).scalar() is not None
 
-    def get_all(self, order=(), **criterion):
-        return self.query().filter_by(**criterion).order_by(*order).all()
+    def exist_by_filter(self, **filter):
+        return self.query().filter_by(**filter).scalar() is not None
 
-    def get_page(self, page=1, per_page=30, order=(), **criterion):
-        criterion = filter_criterion(**criterion)
+    def get(self, id):
+        return self.query().filter_by(**self.get_pk_filter(id)).first()
 
-        return self.query().filter_by(**criterion).order_by(*order).paginate(page, per_page=per_page)
+    def get_by_filter(self, **filter):
+        return self.query().filter_by(**filter).first()
+
+    def get_all(self):
+        return self.query().all()
+
+    def get_all_by_filter(self, sort=(), **filter):
+        return self.query().filter_by(**filter).order_by(*sort).all()
+
+    def get_page(self, page=1, per_page=30):
+        return self.query().paginate(page, per_page=per_page)
+
+    def get_page_by_filter(self, page=1, per_page=30, sort=(), **filter):
+        filter = init_filter(**filter)
+
+        return self.query().filter_by(**filter).order_by(*sort).paginate(page, per_page=per_page)
 
     def query(self, *models):
         if models is None or len(models) == 0:
-            return session.query(self.model)
+            return self.session.query(self.model)
         else:
-            return session.query(*models)
+            return self.session.query(*models)
 
     @transactional()
     def insert(self, obj):
         if isinstance(obj, dict):
             obj = self.model(**obj)
 
-        session.add(obj)
+        self.session.add(obj)
 
     @transactional()
-    def update(self, obj, **criterion):
-        if len(criterion) > 0:
-            self.query().filter_by(**criterion).update(obj if isinstance(obj, dict) else obj.to_dict())
-        elif isinstance(obj, dict):
-            self.query().filter_by(**self.get_pk_criterion_by_object(obj)).update(obj)
+    def insert_all(self, objs):
+        self.session.add_all(objs)
+
+    @transactional()
+    def update(self, obj):
+        if isinstance(obj, dict):
+            self.query().filter_by(**self.get_pk_filter_by_object(obj)).update(obj)
         else:
-            self.merge(obj)
+            self.session.merge(obj)
 
     @transactional()
-    def delete(self, obj=None, **criterion):
-        if len(criterion) > 0:
-            self.query().filter_by(**criterion).delete()
-        elif obj is not None:
-            if isinstance(obj, (int, float)) or isinstance(obj, tuple):
-                self.query().filter_by(**self.get_pk_criterion(obj)).delete()
-            else:
-                session.delete(obj)
+    def update_by_filter(self, obj, **filter):
+        self.query().filter_by(**filter).update(obj if isinstance(obj, dict) else to_dict(obj))
+
+    @transactional()
+    def delete(self, obj):
+        if isinstance(obj, (int, float)) or isinstance(obj, tuple):
+            self.query().filter_by(**self.get_pk_filter(obj)).delete()
+        else:
+            self.session.delete(obj)
+
+    def delete_by_filter(self, **filter):
+        self.query().filter_by(**filter).delete()
 
     def delete_all(self):
         self.query().delete()
 
-    def begin(self, subtransactions=True, nested=False):
-        session.begin(subtransactions=subtransactions, nested=nested)
-
-    def begin_nested(self):
-        session.begin_nested()
-
-    def flush(self, objs):
-        session.flush(objs)
-
-    def merge(self, obj):
-        return session.merge(obj)
-
-    def commit(self):
-        session.commit()
-
-    def rollback(self):
-        session.rollback()
-
-    def get_pk_criterion(self, id):
+    def get_pk_filter(self, id):
         if isinstance(id, (int, float)):
             id = (id,)
 
-        criterion = {}
+        filter = {}
         for idx, pk in enumerate(self.model.__mapper__.primary_key):
-            criterion[pk.name] = id[idx]
+            filter[pk.name] = id[idx]
 
-        return criterion
+        return filter
 
-    def get_pk_criterion_by_object(self, obj):
-        criterion = {}
+    def get_pk_filter_by_object(self, obj):
+        filter = {}
         for idx, pk in enumerate(self.model.__mapper__.primary_key):
-            criterion[pk.name] = obj[pk.name]
+            filter[pk.name] = obj[pk.name]
 
-        return criterion
+        return filter
 
-def filter_criterion(**criterion):
+
+def init_filter(**criterion):
     ret_dict = {}
     for field, value in criterion.items():
         if value is not None:

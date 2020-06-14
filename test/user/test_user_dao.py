@@ -12,7 +12,7 @@ class TestUserDao(TestCase):
         self.user_dao = application.get_component(UserDao)
 
     def test_count(self):
-        count = self.user_dao.count(username='user2')
+        count = self.user_dao.count()
         print(count)
 
     def test_exist(self):
@@ -31,14 +31,23 @@ class TestUserDao(TestCase):
         self.user_dao.insert(user)
 
     def test_get(self):
-        user = self.user_dao.get(9)
-        print('\n', user)
+        user = self.user_dao.get(72)
+
+        role = user.role
+
+        dict_ = user.to_dict()
+
+        user2 = User()
+
+        user2.from_dict(**dict_)
+
+        print(user2)
 
     def test_get_all(self):
         users = self.user_dao.get_all()
         print('\n', users)
 
-    def test_creates_user(self):
+    def test_create_users(self):
         for i in range(50):
             username = 'user%s' % i
             edu_level = EducationLevel.BACHELOR if i % 2 == 0 else EducationLevel.MASTER
@@ -71,7 +80,7 @@ class TestUserDao(TestCase):
     def test_update_by_criterion(self):
         user = {'email': 'user31@gmail.com'}
 
-        self.user_dao.update(user, id=9)
+        self.user_dao.update_by_filter(user, id=9)
 
     def test_delete_by_id(self):
         self.user_dao.delete(4)
@@ -80,7 +89,7 @@ class TestUserDao(TestCase):
         self.user_dao.delete(self.user_dao.get(5))
 
     def test_delete_by_criterion(self):
-        self.user_dao.delete(username='user2')
+        self.user_dao.delete_by_filter(username='user2')
 
     def test_delete_all(self):
         self.user_dao.delete_all()

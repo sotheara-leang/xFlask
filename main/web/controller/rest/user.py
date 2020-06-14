@@ -31,20 +31,22 @@ class UserController(Controller):
 
     @route('page', methods=['POST'])
     def get_page(self, page_form: UserPageForm):
-        pagination = self.user_service.get_page(page_form.get_page(), page_form.get_sort(), page_form.get_criterion())
+        pagination = self.user_service.get_page_by_filter(page_form.get_page(), page_form.get_per_page(),
+                                                          page_form.get_sort(),
+                                                          page_form.get_filter())
         page = Page.from_pagination(pagination)
 
         return Response.success(page)
 
     @route('', methods=['POST'])
     def create(self, user_form: UserForm(exclude=['id'])):
-        self.user_service.create_user(User(**user_form.data))
+        self.user_service.create(User(**user_form.data))
 
         return Response.success()
 
     @route('', methods=['PUT'])
     def update(self, user_form: UserForm):
-        self.user_service.update_user(User(**user_form.data))
+        self.user_service.user(User(**user_form.data))
 
         return Response.success()
 

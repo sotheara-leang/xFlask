@@ -29,7 +29,10 @@ class PageForm(Form):
     sort = FieldList(FormField(SortForm), default=[])
 
     def get_page(self):
-        return Dto(page=self.page.data, per_page=self.per_page.data)
+        return self.page.data
+
+    def get_per_page(self):
+        return self.per_page.data
 
     def get_sort(self):
         ret_data = []
@@ -37,12 +40,13 @@ class PageForm(Form):
             ret_data.append(Dto(field=sort.field.data, order=sort.order.data))
         return ret_data
 
-    def get_criterion(self):
-        criterion = {}
+    def get_filter(self):
+        filter = {}
         for field in self:
             field_name = field.id or field.name
 
             if field_name not in ['page', 'per_page', 'sort']:
-                criterion[field_name] = field.data
+                filter[field_name] = field.data
 
-        return Dto(**criterion)
+        return Dto(**filter)
+

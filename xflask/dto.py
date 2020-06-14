@@ -1,3 +1,6 @@
+from xflask.common.util import to_dict
+
+
 class Dto(object):
 
     def __init__(self, **kwargs):
@@ -6,3 +9,6 @@ class Dto(object):
                 value = Dto(**value)
 
             self.__dict__[name] = value
+
+    def get_dict(self):
+        return to_dict(self)
