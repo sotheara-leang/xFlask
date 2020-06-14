@@ -53,17 +53,25 @@ class Application(object):
 
     #### SETTER ####
 
-    def set_filters(self, filters=[]):
-        self.filters = filters
-
     def set_error_handler(self, error_handler):
         self.error_handler = error_handler
 
-    def set_listeners(self, listeners=[]):
-        self.listeners = listeners
-
     def set_auth_manager(self, auth_manager):
         self.auth_manager = auth_manager
+
+    def register_filter(self, filter, order=None):
+        order = order or filter.order
+        if order is None:
+            self.filters.append(filter)
+        else:
+            self.filters.insert(order, filter)
+
+    def register_listener(self, listener, order=None):
+        order = order or listener.order
+        if order is None:
+            self.listeners.append(listener)
+        else:
+            self.listeners.insert(order, listener)
 
     def register_json_serializer(self, serializer):
         self.json_serializers.append(serializer)
@@ -250,7 +258,11 @@ class Application(object):
             obj = self.get_component(component)
 
             if isinstance(obj, ApplicationStateListener):
-                self.listeners.append(obj)
+                order = obj.order
+                if order is None:
+                    self.listeners.append(obj)
+                else:
+                    self.listeners.insert(order, obj)
 
             if isinstance(obj, Filter):
                 order = obj.order
@@ -351,7 +363,10 @@ class Application(object):
 
             self.auth_manager = auth_manager
 
-        auth_manager.init(self)
+        if isinstance(auth_manager, AuthManager):
+            auth_manager.init(self)
+        else:
+            self._logger.debug('!!! Invalid auth manager: %s', auth_manager.__name__)
 
     def _on_start(self):
         with self.app.app_context():
@@ -365,7 +380,7 @@ class Application(object):
                 if isinstance(listener, ApplicationStateListener):
                     listener.on_start(self)
                 else:
-                    self._logger.debug('!!! Invalid application state listener: %s', listener.__name__)
+                    self._logger.error('!!! Invalid application state listener: %s', listener.__name__)
 
     def _on_stop(self):
         with self.app.app_context():

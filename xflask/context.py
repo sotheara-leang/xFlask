@@ -1,4 +1,5 @@
 class ApplicationStateListener(object):
+    order = None
 
     def on_start(self, application):
         pass

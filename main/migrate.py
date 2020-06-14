@@ -5,7 +5,7 @@ from xflask.sqlalchemy import db
 from main import *
 
 
-application = Application(db, filters=None)
+application = Application(db)
 
 migration = Migration(application, ['main.model'])
 
