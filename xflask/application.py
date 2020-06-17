@@ -35,19 +35,19 @@ class Application(object):
 
         self.conf_files = conf_files or [get_file_path('main/conf/server.yml')]
 
-        self._listeners = []
+        self.listeners = []
 
-        self._components = []
+        self.components = []
 
         self._component_registry = dict()
 
-        self._error_handler = self.DEF_ERROR_HANDLER
+        self.error_handler = self.DEF_ERROR_HANDLER
 
-        self._filters = []
+        self.filters = []
 
-        self._auth_manager = None
+        self.auth_manager = None
 
-        self._json_serializers = []
+        self.json_serializers = []
 
         self._pre_init()
 
@@ -57,30 +57,30 @@ class Application(object):
         return self.conf.get(property_name)
 
     def set_error_handler(self, error_handler):
-        self._error_handler = error_handler
+        self.error_handler = error_handler
 
     def set_auth_manager(self, auth_manager):
-        self._auth_manager = auth_manager
+        self.auth_manager = auth_manager
 
     def register_filter(self, filter, order=None):
         order = order or filter.order
         if order is None:
-            self._filters.append(filter)
+            self.filters.append(filter)
         else:
-            self._filters.insert(order, filter)
+            self.filters.insert(order, filter)
 
     def register_listener(self, listener, order=None):
         order = order or listener.order
         if order is None:
-            self._listeners.append(listener)
+            self.listeners.append(listener)
         else:
-            self._listeners.insert(order, listener)
+            self.listeners.insert(order, listener)
 
     def register_json_serializer(self, serializer):
-        self._json_serializers.append(serializer)
+        self.json_serializers.append(serializer)
 
     def register_component(self, component):
-        self._components.append(component)
+        self.components.append(component)
 
     #### GETTER ####
 
@@ -144,7 +144,7 @@ class Application(object):
         # json encoder
         json_serializers = []
         json_serializers += JSON_SERIALIZERS
-        json_serializers += self._json_serializers
+        json_serializers += self.json_serializers
 
         class _JsonEncoder(JSONEncoder):
 
@@ -204,7 +204,7 @@ class Application(object):
                 binder.bind(SQLAlchemy, to=self.db, scope=singleton)
 
             # manually registered components
-            for obj in self._components:
+            for obj in self.components:
                 if issubclass(obj, Component):
                     self._component_registry[obj] = ''
 
@@ -265,16 +265,16 @@ class Application(object):
             if isinstance(obj, ApplicationStateListener):
                 order = obj.order
                 if order is None:
-                    self._listeners.append(obj)
+                    self.listeners.append(obj)
                 else:
-                    self._listeners.insert(order, obj)
+                    self.listeners.insert(order, obj)
 
             if isinstance(obj, Filter):
                 order = obj.order
                 if order is None:
-                    self._filters.append(obj)
+                    self.filters.append(obj)
                 else:
-                    self._filters.insert(order, obj)
+                    self.filters.insert(order, obj)
 
     def _init_controllers(self):
         for package in self.conf.get('CONTROLLER') or []:
@@ -330,12 +330,12 @@ class Application(object):
                 self._logger.debug('%*s | %26s | %s', max_len, route.rule, route.methods, route.endpoint)
 
     def _init_error_handler(self):
-        error_handler = self._error_handler
+        error_handler = self.error_handler
         if type(error_handler) == type and issubclass(error_handler, ErrorHandler):
             error_handler_ = self.get_component(error_handler)
             error_handler = error_handler() if error_handler_ is None else error_handler_
 
-            self._error_handler = error_handler
+            self.error_handler = error_handler
 
         if isinstance(error_handler, ErrorHandler):
             error_handler.init(self)
@@ -343,12 +343,12 @@ class Application(object):
             self._logger.error('!!! Invalid error handler: %s', error_handler.__name__)
 
     def _init_filters(self):
-        for idx, filter_ in enumerate(self._filters):
+        for idx, filter_ in enumerate(self.filters):
             if type(filter_) == type and issubclass(filter_, Filter):
                 filter__ = self.get_component(filter_)
                 filter_ = filter_() if filter__ is None else filter__
 
-                self._filters[idx] = filter_
+                self.filters[idx] = filter_
 
             if isinstance(filter_, Filter):
                 filter_.init(self)
@@ -359,15 +359,15 @@ class Application(object):
                 self._logger.error('!!! Invalid filter: %s', filter_.__name__)
 
     def _init_auth_manager(self):
-        if self._auth_manager is None:
+        if self.auth_manager is None:
             return
 
-        auth_manager = self._auth_manager
+        auth_manager = self.auth_manager
         if type(auth_manager) == type and issubclass(auth_manager, AuthManager):
             auth_manager_ = self.get_component(auth_manager)
             auth_manager = auth_manager() if auth_manager_ is None else auth_manager_
 
-            self._auth_manager = auth_manager
+            self.auth_manager = auth_manager
 
         if isinstance(auth_manager, AuthManager):
             auth_manager.init(self)
@@ -376,12 +376,12 @@ class Application(object):
 
     def _on_start(self):
         with self.app.app_context():
-            for idx, listener in enumerate(self._listeners):
+            for idx, listener in enumerate(self.listeners):
                 if type(listener) == type and issubclass(listener, ApplicationStateListener):
                     listener_ = self.get_component(listener)
                     listener = listener() if listener_ is None else listener_
 
-                    self._listeners[idx] = listener
+                    self.listeners[idx] = listener
 
                 if isinstance(listener, ApplicationStateListener):
                     listener.on_start(self)
@@ -390,5 +390,5 @@ class Application(object):
 
     def _on_stop(self):
         with self.app.app_context():
-            for listener in self._listeners:
+            for listener in self.listeners:
                 listener.on_stop(self)

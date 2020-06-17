@@ -1,9 +1,11 @@
 from datetime import datetime
+from typing import Optional, Any
 
 from flask import json
 from sqlalchemy import inspect
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.attributes import QueryableAttribute
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from xflask.sqlalchemy import db
 from xflask.web.security import get_current_user
@@ -17,7 +19,11 @@ class Model(db.Model):
         return cls.__table__.columns.get(col_name)
 
     @classmethod
-    def get_sort_expression(cls, col_name, sort='asc'):
+    def get_relationship(cls, rel_name):
+        return cls.__table__.relationships.get(rel_name)
+
+    @classmethod
+    def get_sort_filter(cls, col_name, sort='asc'):
         column = cls.get_column(col_name)
         if column is None:
             return None
@@ -331,18 +337,21 @@ class AuditModel(TrackModel):
 class SoftModel(AuditModel):
     __abstract__ = True
 
+    deleted_by: Optional[Any]
+
     deleted_at = db.Column(db.DateTime)
 
     @declared_attr
     def deleted_by(self):
         return db.Column(db.Integer)
 
+    @hybrid_property
+    def soft(self):
+        return self.deleted_at is not None or self.deleted_by is not None
+
     def set_soft_columns(self):
         self.deleted_at = datetime.now()
         self.deleted_by = _current_user_id_or_none()
-
-    def is_soft(self):
-        return self.deleted_at is not None
 
 
 def _current_user_id_or_none():

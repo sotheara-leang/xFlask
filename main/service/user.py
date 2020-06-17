@@ -22,7 +22,7 @@ class UserService(CrudService):
         # sort
         sort_ = []
         for e in sort:
-            sort_.append(User.get_sort_expression(e.field, e.order))
+            sort_.append(User.get_sort_filter(e.field, e.order))
 
         # filter
         filter_ = {}
