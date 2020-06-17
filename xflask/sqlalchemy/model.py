@@ -349,9 +349,9 @@ class SoftModel(AuditModel):
     def soft(self):
         return self.deleted_at is not None or self.deleted_by is not None
 
-    def set_soft_columns(self):
-        self.deleted_at = datetime.now()
-        self.deleted_by = _current_user_id_or_none()
+    def set_soft_columns(self, deleted_at=None, deleted_by=None):
+        self.deleted_at = deleted_at or datetime.now()
+        self.deleted_by = deleted_by or _current_user_id_or_none()
 
 
 def _current_user_id_or_none():
