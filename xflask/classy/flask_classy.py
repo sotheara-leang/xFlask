@@ -20,11 +20,13 @@ from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.routing import parse_rule
 from wtforms import Form
 from wtforms.form import FormMeta
+from wtforms.fields.core import UnboundField
 
 from xflask.common.util import to_dict, merge_dict
 from xflask.component import Component
 from xflask.exception import Exception as XException
 from xflask.type.sys_code import SysCode
+from xflask.wtforms import Form as XForm
 
 _py2 = sys.version_info[0] == 2
 
@@ -214,10 +216,12 @@ class FlaskView(object):
             try:
                 req_data = request.get_json() if request.is_json else CombinedMultiDict(
                     (request.files, request.form)).to_dict()
+                # req_data.update(request.view_args)
             except Exception:
                 req_data = {}
 
             injected_args = {}
+
             for arg_name, arg_annotation in view_args.items():
                 # form class
                 if isinstance(arg_annotation, FormMeta):
@@ -238,6 +242,19 @@ class FlaskView(object):
                         raise XException(SysCode.INVALID, form.errors)
 
                     arg_value = form
+                # form field
+                # elif isinstance(arg_annotation, UnboundField):
+                #     class F(XForm):
+                #         pass
+                #
+                #     setattr(F, arg_name, arg_annotation.field_class(**arg_annotation.kwargs))
+                #
+                #     form = F.from_json(req_data)
+                #     if not form.validate():
+                #         raise XException(SysCode.INVALID, form.errors)
+                #
+                #     arg_value = form[arg_name].data
+
                 # component
                 elif inspect.isclass(arg_annotation) and issubclass(arg_annotation, Component):
                     arg_value = injector.get(arg_annotation)
