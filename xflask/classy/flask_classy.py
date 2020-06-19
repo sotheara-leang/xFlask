@@ -27,6 +27,7 @@ from xflask.component import Component
 from xflask.exception import Exception as XException
 from xflask.type.sys_code import SysCode
 from xflask.wtforms import Form as XForm
+from xflask.classy.annotation import UrlParam, Header
 
 _py2 = sys.version_info[0] == 2
 
@@ -254,7 +255,30 @@ class FlaskView(object):
                 #         raise XException(SysCode.INVALID, form.errors)
                 #
                 #     arg_value = form[arg_name].data
+                # url parameter
+                elif isinstance(arg_annotation, UrlParam) or issubclass(arg_annotation, UrlParam):
+                    args = request.args
+                    arg_annotation = arg_annotation() if inspect.isclass(arg_annotation) else arg_annotation
+                    arg_name = arg_annotation.name if arg_annotation.name is not None else arg_name
 
+                    if arg_annotation.list is False:
+                        arg_value = args.get(arg_name, arg_annotation.default, arg_annotation.type)
+                    else:
+                        arg_value = args.getlist(arg_name, arg_annotation.type)
+
+                    if arg_value is None and arg_annotation.required is True:
+                        error = {arg_name: ['This url parameter is required']}
+                        raise XException(SysCode.INVALID, error)
+                # header
+                elif isinstance(arg_annotation, Header) or issubclass(arg_annotation, Header):
+                    args = request.headers
+                    arg_annotation = arg_annotation() if inspect.isclass(arg_annotation) else arg_annotation
+                    arg_name = arg_annotation.name if arg_annotation.name is not None else arg_name
+
+                    arg_value = args.get(arg_name)
+                    if arg_value is None and arg_annotation.required is True:
+                        error = {arg_name: ['This header is required']}
+                        raise XException(SysCode.INVALID, error)
                 # component
                 elif inspect.isclass(arg_annotation) and issubclass(arg_annotation, Component):
                     arg_value = injector.get(arg_annotation)
