@@ -21,7 +21,7 @@ class UserController(Controller):
         users = self.user_service.get_all()
         return Response.success(users)
 
-    @route('<user_id>')
+    @route('<int:user_id>')
     def get(self, user_id):
         user = self.user_service.get(user_id)
         if user is None:
@@ -46,7 +46,7 @@ class UserController(Controller):
 
     @route('', methods=['PUT'])
     def update(self, user_form: UserForm):
-        self.user_service.user(User(**user_form.data))
+        self.user_service.update(User(**user_form.data))
 
         return Response.success()
 

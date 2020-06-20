@@ -1,4 +1,4 @@
-from xflask.sqlalchemy import session, transactional
+from xflask.sqlalchemy import db, transactional
 
 from test.test_case import *
 
@@ -48,13 +48,13 @@ class TestDocument(TestCase):
     def test_delete_word_from_doc(self):
         doc = self.doc_dao.get(1)
 
-        session.begin()
+        db.session.begin()
 
         for word in doc.words:
             if word.word == 'hello':
                 doc.words.remove(word)
 
-        session.commit()
+        db.session.commit()
 
     def test_get_word(self):
         word = self.word_dao.get(1)
