@@ -24,9 +24,13 @@ class Enum(enum.Enum):
 
     @classmethod
     def value_of(cls, code):
-        result = None
         enum_type = cls.type()
-        code = enum_type(code) if enum_type is not None else code
+        try:
+            code = enum_type(code) if enum_type is not None else code
+        except ValueError:
+            return None
+
+        result = None
         for e in cls:
             e_value = e.value if not isinstance(e.value, tuple) else e.value[0]
             if e_value == code:

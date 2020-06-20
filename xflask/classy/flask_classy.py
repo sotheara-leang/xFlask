@@ -217,7 +217,8 @@ class FlaskView(object):
             try:
                 req_data = request.get_json() if request.is_json else CombinedMultiDict(
                     (request.files, request.form)).to_dict()
-                # req_data.update(request.view_args)
+
+                req_data.update(request.view_args)
             except Exception:
                 req_data = {}
 
@@ -261,9 +262,8 @@ class FlaskView(object):
                     arg_annotation = arg_annotation() if inspect.isclass(arg_annotation) else arg_annotation
                     arg_name = arg_annotation.name if arg_annotation.name is not None else arg_name
 
-                    if arg_annotation.list is False:
-                        arg_value = args.get(arg_name, arg_annotation.default, arg_annotation.type)
-                    else:
+                    arg_value = args.get(arg_name, arg_annotation.default, arg_annotation.type)
+                    if arg_value is None:
                         arg_value = args.getlist(arg_name, arg_annotation.type)
 
                     if arg_value is None and arg_annotation.required is True:
