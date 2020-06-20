@@ -9,6 +9,8 @@ application = Application(db, conf_files=['main/conf/server.yml', 'main/conf/set
 application.set_auth_manager(JwtAuthManager)
 application.register_filter(ApiLoggingFilter)
 
+app = application.app
+
 application.init()
 
 if __name__ == '__main__':

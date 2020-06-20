@@ -39,7 +39,7 @@ class Application(object):
 
         self.components = []
 
-        self.component_registry = dict()
+        self._component_registry = dict()
 
         self.error_handler = self.DEF_ERROR_HANDLER
 
@@ -52,6 +52,9 @@ class Application(object):
         self._pre_init()
 
     #### SETTER ####
+
+    def get_property(self, property_name):
+        return self.conf.get(property_name)
 
     def set_error_handler(self, error_handler):
         self.error_handler = error_handler
@@ -82,7 +85,7 @@ class Application(object):
     #### GETTER ####
 
     def get_component(self, clazz):
-        component = self.flask_injector.injector.get(clazz)
+        component = self.injector.injector.get(clazz)
         return None if type(component) == type else component
 
     #### RUN APP ####
@@ -187,6 +190,7 @@ class Application(object):
                     importlib.import_module(namespace)
                 except Exception as e:
                     self._logger.exception('!!! Failed to initialize model: %s', namespace, e)
+
                     sys.exit()
 
     def _init_components(self):
@@ -202,7 +206,7 @@ class Application(object):
             # manually registered components
             for obj in self.components:
                 if issubclass(obj, Component):
-                    self.component_registry[obj] = ''
+                    self._component_registry[obj] = ''
 
                     scope = singleton if obj.scope == 'singleton' else request
                     binder.bind(obj, obj, scope)
@@ -231,7 +235,7 @@ class Application(object):
                                     if obj.abstract is True:
                                         continue
 
-                                    self.component_registry[obj] = ''
+                                    self._component_registry[obj] = ''
 
                                     valid_module = True
 
@@ -245,16 +249,17 @@ class Application(object):
 
                         except Exception as e:
                             self._logger.exception('!!! Failed to initialize modules in %s', namespace, e)
+
                             sys.exit()
 
                 except Exception:
                     self._logger.debug('!!! No modules founded in %s', package)
 
-        self.flask_injector = FlaskInjector(app=self.app, modules=[static_module, scan_module])
+        self.injector = FlaskInjector(app=self.app, modules=[static_module, scan_module])
 
         # POST INIT
 
-        for component, _ in self.component_registry.items():
+        for component, _ in self._component_registry.items():
             obj = self.get_component(component)
 
             if isinstance(obj, ApplicationStateListener):
@@ -295,14 +300,15 @@ class Application(object):
                                 valid_module = True
 
                                 try:
-                                    controller.register(self.app, self.flask_injector.injector)
-                                except Exception:
-                                    self._logger.exception('Failed to initialize controller: %s', class_name)
+                                    controller.register(self.app, self.injector.injector)
+                                except Exception as e:
+                                    self._logger.exception('Failed to initialize controller: %s', class_name, e)
+
                                     sys.exit()
 
                                 self._logger.debug('Register controller: %s', class_name)
                             else:
-                                self._logger.debug('!!! Invalid controller: %s', class_name)
+                                self._logger.error('!!! Invalid controller: %s', class_name)
 
                         if not valid_module:
                             del module
@@ -334,7 +340,7 @@ class Application(object):
         if isinstance(error_handler, ErrorHandler):
             error_handler.init(self)
         else:
-            self._logger.debug('!!! Invalid error handler: %s', error_handler.__name__)
+            self._logger.error('!!! Invalid error handler: %s', error_handler.__name__)
 
     def _init_filters(self):
         for idx, filter_ in enumerate(self.filters):
@@ -350,7 +356,7 @@ class Application(object):
                 self.app.before_request(filter_.before)
                 self.app.after_request(filter_.after)
             else:
-                self._logger.debug('!!! Invalid filter: %s', filter_.__name__)
+                self._logger.error('!!! Invalid filter: %s', filter_.__name__)
 
     def _init_auth_manager(self):
         if self.auth_manager is None:
@@ -366,7 +372,7 @@ class Application(object):
         if isinstance(auth_manager, AuthManager):
             auth_manager.init(self)
         else:
-            self._logger.debug('!!! Invalid auth manager: %s', auth_manager.__name__)
+            self._logger.error('!!! Invalid auth manager: %s', auth_manager.__name__)
 
     def _on_start(self):
         with self.app.app_context():

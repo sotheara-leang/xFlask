@@ -7,7 +7,7 @@ from main import *
 
 application = Application(db)
 
-migration = Migration(application, ['main.model'])
+migration = Migration(application)
 
 if __name__ == '__main__':
     migration.run()

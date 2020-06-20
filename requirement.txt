@@ -11,3 +11,5 @@ email-validator
 Werkzeug==0.16.1
 PyYAML
 psycopg2-binary
+gunicorn
+shyaml

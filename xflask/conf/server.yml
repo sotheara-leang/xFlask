@@ -25,6 +25,11 @@ CONTROLLER:
     - main.web.controller.mvc
     - main.web.controller.rest
 
+MIGRATION:
+    DIR: migration
+    MODEL:
+        - main.model
+
 LOGGING: true
 LOGGING_CONF_FILE: ${XFLASK_HOME}/conf/logging.yml
 
