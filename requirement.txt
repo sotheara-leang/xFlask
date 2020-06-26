@@ -13,3 +13,4 @@ PyYAML
 psycopg2-binary
 gunicorn
 shyaml
+twine

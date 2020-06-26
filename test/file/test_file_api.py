@@ -12,7 +12,8 @@ class TestApiFile(TestCase):
         )
         data = dict(
             file=file,
-            type=FileType.PDF.code()
+            type=FileType.PDF.code(),
+            file_name='222'
         )
         response = self.client.post('/api/upload', data=data, content_type='multipart/form-data')
 
