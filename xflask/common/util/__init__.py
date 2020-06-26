@@ -38,7 +38,8 @@ def scan_namespaces(package):
             if file_name.startswith('_') or 'migrate' in file_name or 'server' in file_name:
                 continue
 
-            namespace = file.replace(get_root_dir(), '').replace('/', '.')
+            namespace = file.replace(get_root_dir(), '')
+            namespace = re.sub('/+', '.', namespace)
             namespace = namespace[1:-3]
             namespaces.append(namespace)
 
