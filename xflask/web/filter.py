@@ -2,6 +2,7 @@ import logging
 
 from flask import request
 from werkzeug.routing import Map, Rule
+from werkzeug.datastructures import CombinedMultiDict
 
 
 class Filter(object):
@@ -49,20 +50,23 @@ class ApiLoggingFilter(Filter):
             self.logger.debug('>>> Request')
             self.logger.debug('%s %s' % (request.method, request.url))
 
-            if request.is_json is True:
-                try:
-                    data = request.get_json()
-                except Exception:
-                    data = ''
+            headers = dict() if request.headers is None else dict(request.headers)
+            content = request.get_json() if request.is_json else \
+                CombinedMultiDict((request.files, request.form)).to_dict()
 
-                self.logger.debug(data)
+            self.logger.debug('Headers: %s' % headers)
+            self.logger.debug('Data: %s' % content)
 
     def after(self, response):
         if self.excludes_matcher.test(request.path) is True:
             return response
 
-        if response.is_json is True:
-            self.logger.debug('<<< Response')
-            self.logger.debug(response.get_json())
+        self.logger.debug('<<< Response')
+
+        headers = dict() if response.headers is None else dict(response.headers)
+        content = response.get_json()
+        
+        self.logger.debug('Headers: %s' % headers)
+        self.logger.debug('Data: %s' % content)
 
         return response
